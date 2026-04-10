@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG11 Capital — Portfolio Dashboard V5</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --bg:#0D1117;--card:#161B22;--card2:#1C2128;--border:#30363D;
+  --text:#E6EDF3;--muted:#7D8590;
+  --orange:#F97316;--amber:#F59E0B;--green:#3FB950;
+  --blue:#58A6FF;--purple:#D2A8FF;--red:#FF7B72;
+  --yellow:#E3B341;--pink:#F778BA;--teal:#56D3C8;--cyan:#79C0FF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+header{background:var(--card);border-bottom:1px solid var(--border);
+  padding:8px 20px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;height:52px}
+.logo{font-size:1.4rem;font-weight:700;letter-spacing:2px;white-space:nowrap;
+  background:linear-gradient(135deg,var(--orange),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tab{padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;
+  background:var(--orange);border:1px solid var(--orange);color:#000}
+.header-meta{margin-left:auto;font-size:.72rem;color:var(--muted)}
+
+/* ── MAIN ── */
+main{padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+
+/* ── 3-COL LAYOUT ── */
+.dash-main{display:grid;grid-template-columns:255px 1fr 370px;gap:12px;align-items:stretch}
+@media(max-width:1400px){.dash-main{grid-template-columns:240px 1fr 320px}}
+@media(max-width:1100px){.dash-main{grid-template-columns:240px 1fr}}
+
+/* ── LEFT PANEL ── */
+#kpi-panel{display:flex;flex-direction:column;gap:8px}
+
+/* BB8-style balance stack */
+.bal-stack{display:flex;flex-direction:column;gap:5px;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px}
+.bal-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.bal-card .label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.bal-card .value{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.bal-card .sub{font-size:.67rem;color:var(--muted);margin-top:2px}
+.v-start{color:var(--text)}.v-prev{color:var(--yellow)}.v-actual{color:var(--orange)}
+.diff-box{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.25);
+  border-radius:7px;padding:7px 10px;margin-top:2px}
+.diff-box .diff-label{font-size:.6rem;color:var(--muted);margin-bottom:2px}
+.diff-box .diff-val{font-size:.92rem;font-weight:700;color:var(--green)}
+.diff-box .diff-pct{font-size:.75rem;color:var(--green);margin-left:6px}
+
+#kpi-row{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start}
+.kpi{background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:7px 9px}
+.kpi .kpi-label{font-size:.57rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;line-height:1.3}
+.kpi .kpi-vals{display:flex;gap:5px;align-items:baseline;flex-wrap:wrap;margin-top:2px}
+.kpi .kpi-main{font-size:.9rem;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .kpi-prev{font-size:.65rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--blue)}.warn{color:var(--amber)}
+
+/* ── CENTER ── */
+.charts-area{display:flex;flex-direction:column;gap:10px;height:100%}
+.charts-top{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0;align-items:stretch}
+.charts-bot{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0;align-items:stretch}
+@media(max-width:700px){.charts-top,.charts-bot{grid-template-columns:1fr}}
+
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:6px;height:100%}
+.card-title{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.card-title-row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.card-sub{font-size:.62rem;color:var(--muted);margin-top:-3px}
+.legend-row{display:flex;gap:8px;align-items:center;font-size:.65rem;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px}
+.chart-wrap{position:relative;flex:1;min-height:0}
+.chart-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+
+/* ── RIGHT PANEL ── */
+#right-panel{display:flex;flex-direction:column;gap:10px;height:100%}
+.port-chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+.port-chart-wrap{position:relative;flex:1;min-height:0}
+.port-chart-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+
+.deals-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.deals-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.deals-nav{display:flex;align-items:center;gap:5px}
+.deals-nav button{background:var(--card2);border:1px solid var(--border);color:var(--muted);
+  border-radius:4px;width:20px;height:20px;cursor:pointer;font-size:.9rem;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.deals-nav button:hover{border-color:var(--orange);color:var(--orange)}
+.nav-count{font-size:.7rem;color:var(--muted);min-width:28px;text-align:center}
+.deal-name{font-size:.92rem;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:4px}
+.deal-sub{font-size:.66rem;color:var(--muted);margin-top:-2px;margin-bottom:6px}
+.deal-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.deal-row:last-child{border-bottom:none}
+.d-label{font-size:.66rem;color:var(--muted)}
+.d-val{font-size:.7rem;font-weight:600;text-align:right}
+.yield-badge{font-size:.62rem;padding:1px 5px;border-radius:3px;font-weight:600;margin-left:2px}
+.yield-low{background:rgba(63,185,80,.15);color:var(--green)}
+.yield-mid{background:rgba(249,115,22,.15);color:var(--orange)}
+.yield-high{background:rgba(248,81,73,.15);color:var(--red)}
+.coming-soon{text-align:center;padding:24px 0;color:var(--muted)}
+.cs-icon{font-size:2rem;margin-bottom:6px}
+.cs-title{font-size:.88rem;font-weight:600;color:var(--muted);letter-spacing:.5px}
+.cs-sub{font-size:.62rem;color:var(--border);margin-top:3px}
+
+/* ── TRACK RECORD ── */
+.tr-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;margin-bottom:2px}
+.tr-card-title{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:10px}
+.tr-wrap{overflow-x:auto}
+.tr-table{border-collapse:collapse;width:100%;font-size:.78rem;white-space:nowrap}
+.tr-table th{color:var(--muted);font-weight:600;font-size:.62rem;letter-spacing:.4px;
+  padding:6px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.tr-table th:first-child{text-align:left;padding-left:12px;min-width:58px}
+.tr-table th:last-child{text-align:right;padding-right:12px;min-width:72px}
+.tr-table td{padding:8px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04)}
+.tr-table tr:last-child td{border-bottom:none}
+.tr-year-cell{text-align:left!important;padding-left:12px!important}
+.tr-total-cell{text-align:right!important;padding-right:12px!important;font-size:.82rem}
+.tr-note{font-size:.6rem;color:var(--muted);margin-top:8px;line-height:1.5}
+
+/* ── TABLE TABS ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.table-top{padding:10px 16px;display:flex;gap:8px;align-items:center;
+  border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ttab{padding:4px 12px;border-radius:5px;font-size:.76rem;font-weight:600;cursor:pointer;
+  background:transparent;border:1px solid var(--border);color:var(--muted);transition:all .15s}
+.ttab.active{background:var(--orange);border-color:var(--orange);color:#000}
+.ttab:hover:not(.active){border-color:var(--orange);color:var(--orange)}
+.tab-sep{width:1px;height:20px;background:var(--border)}
+.table-toolbar{padding:8px 16px;display:flex;gap:8px;align-items:center;
+  border-bottom:1px solid var(--border);flex-wrap:wrap}
+.table-toolbar input,.table-toolbar select{
+  background:var(--card2);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;padding:5px 10px;font-size:.78rem;outline:none}
+.table-toolbar input:focus,.table-toolbar select:focus{border-color:var(--orange)}
+.tcount{margin-left:auto;font-size:.73rem;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead th{background:var(--card2);color:var(--muted);font-weight:600;text-transform:uppercase;
+  font-size:.62rem;letter-spacing:.3px;padding:8px 10px;text-align:left;
+  position:sticky;top:0;z-index:5;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--orange)}
+thead th.sort-asc::after{content:' ↑';color:var(--orange)}
+thead th.sort-desc::after{content:' ↓';color:var(--orange)}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:nth-child(even){background:#0f151c}
+tbody tr:hover{background:#1a2535}
+td{padding:5px 10px;white-space:nowrap}
+td.val-col{font-variant-numeric:tabular-nums;text-align:right}
+td.pct-col{text-align:right}
+td.pos-val{color:var(--green)}td.neg-val{color:var(--red)}
+.badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:.62rem;font-weight:500}
+.b-lending{background:#1a2b1a;color:var(--green)}
+.b-farming{background:#2b2a1a;color:var(--yellow)}
+.b-yield-trading{background:#1f2a3c;color:var(--blue)}
+.b-staking{background:#1e1a2b;color:var(--purple)}
+.b-structured{background:#2b1a2a;color:var(--pink)}
+.b-leverage{background:#2b1a1a;color:var(--red)}
+.b-fixed{background:#1a2b2b;color:var(--teal)}
+.b-credit{background:#2b2218;color:var(--amber)}
+.risk-cons{color:var(--green);font-weight:600}
+.risk-mod{color:var(--yellow);font-weight:600}
+.risk-agg{color:var(--orange);font-weight:600}
+.risk-spec{color:var(--red);font-weight:600}
+
+/* Coinshift tag */
+.coins-tag{display:inline-block;font-size:.58rem;font-weight:700;
+  background:rgba(192,132,252,.15);border:1px solid rgba(192,132,252,.4);
+  color:var(--purple);border-radius:3px;padding:0 4px;margin-right:3px;vertical-align:middle}
+
+/* ── STRATEGIES TAB ── */
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* Expandable Coinshift row */
+tr.expandable-row td:first-child{cursor:pointer}
+tr.expandable-row td:first-child::before{content:'▶ ';font-size:.6rem;color:var(--purple);
+  transition:transform .2s}
+tr.expandable-row.open td:first-child::before{content:'▼ '}
+.detail-row{display:none}
+.detail-row.open{display:table-row}
+.detail-cell{padding:0!important;background:rgba(192,132,252,.04)!important;
+  border-bottom:2px solid rgba(192,132,252,.3)!important}
+.detail-inner{padding:10px 16px 12px 32px}
+.detail-title{font-size:.65rem;color:var(--purple);font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.detail-table{width:100%;border-collapse:collapse;font-size:.72rem}
+.detail-table th{color:var(--muted);font-size:.58rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;
+  border-bottom:1px solid rgba(192,132,252,.2)}
+.detail-table td{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+.detail-table tr:last-child td{border-bottom:none}
+.tranche-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.6rem;font-weight:600}
+.tr-liq{background:rgba(88,166,255,.15);color:var(--blue)}
+.tr-cons{background:rgba(63,185,80,.15);color:var(--green)}
+.tr-lev{background:rgba(248,81,73,.15);color:var(--red)}
+
+footer{text-align:center;padding:14px;color:var(--muted);font-size:.68rem;
+  border-top:1px solid var(--border);margin-top:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">◆ IG11</div>
+  <button class="tab">Mar 2026</button>
+  <div class="header-meta" id="header-meta">Last update · Mar 2026 · AUM $100.00M</div>
+</header>
+
+<main>
+  <div class="dash-main">
+
+    <!-- ── LEFT ── -->
+    <div id="kpi-panel">
+      <!-- BB8-style balance stack -->
+      <div class="bal-stack">
+        <div class="bal-card">
+          <div class="label">Starting Balance</div>
+          <div class="value v-start">$100.00M</div>
+        </div>
+        <div class="bal-card">
+          <div class="label">Previous Balance</div>
+          <div class="value" style="color:var(--muted);font-size:1.1rem">— First month</div>
+        </div>
+        <div class="bal-card">
+          <div class="label">Actual Balance</div>
+          <div class="value v-actual">$100.00M</div>
+          <div class="sub">Inception · Mar 2026</div>
+        </div>
+        <div class="diff-box">
+          <div class="diff-label">Projected year-end gain (V9 CAGR)</div>
+          <div>
+            <span class="diff-val">+$14.64M</span>
+            <span class="diff-pct">▲ 14.64%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div id="kpi-row"></div>
+    </div>
+
+    <!-- ── CENTER ── -->
+    <div class="charts-area">
+      <div class="charts-top">
+        <div class="chart-card">
+          <div class="card-title" id="ct-token">Token Allocation · Mar 2026</div>
+          <div class="chart-wrap"><canvas id="chart-token"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-title" id="ct-protocol">Protocol Allocation · Mar 2026</div>
+          <div class="chart-wrap"><canvas id="chart-protocol"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-bot">
+        <div class="chart-card">
+          <div class="card-title-row">
+            <div class="card-title">Target VS Current — Strategies</div>
+            <div class="legend-row">
+              <span><span class="legend-dot" style="background:#58A6FF"></span>Target</span>
+              <span><span class="legend-dot" style="background:#FF7B72"></span>Current</span>
+            </div>
+          </div>
+          <div class="card-sub">All 20 strategies · Mar 2026 · V9 order</div>
+          <div class="chart-wrap"><canvas id="chart-strat-comp"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-title-row">
+            <div class="card-title">Target VS Current — Protocols</div>
+            <div class="legend-row">
+              <span><span class="legend-dot" style="background:#58A6FF"></span>Target</span>
+              <span><span class="legend-dot" style="background:#FF7B72"></span>Current</span>
+            </div>
+          </div>
+          <div class="card-sub">16 protocols · sorted by strategy order</div>
+          <div class="chart-wrap"><canvas id="chart-proto-comp"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT ── -->
+    <div id="right-panel">
+      <div class="port-chart-card">
+        <div class="card-title-row">
+          <div class="card-title">Portfolio Value ($)</div>
+          <div style="font-size:.68rem;color:var(--muted)">Mar 2026 → Dec 2026 · Projected</div>
+        </div>
+        <div class="port-chart-wrap"><canvas id="chart-port"></canvas></div>
+      </div>
+      <div class="deals-card">
+        <div class="deals-header">
+          <div class="card-title">Private Deals / LBP</div>
+          <div class="deals-nav">
+            <button onclick="prevDeal()">‹</button>
+            <span class="nav-count" id="deal-count">1/10</span>
+            <button onclick="nextDeal()">›</button>
+          </div>
+        </div>
+        <div id="deal-content"></div>
+      </div>
+    </div>
+
+  </div><!-- /dash-main -->
+
+  <!-- ── TRACK RECORD ── -->
+  <div class="tr-card">
+    <div class="tr-card-title">Monthly Track Record</div>
+    <div class="tr-wrap">
+      <table class="tr-table">
+        <thead><tr>
+          <th>YEAR</th><th>JAN</th><th>FEB</th><th>MAR</th><th>APR</th>
+          <th>MAY</th><th>JUN</th><th>JUL</th><th>AUG</th><th>SEP</th>
+          <th>OCT</th><th>NOV</th><th>DEC</th><th>TOTAL</th>
+        </tr></thead>
+        <tbody id="tr-body"></tbody>
+      </table>
+    </div>
+    <p class="tr-note">Snapshot taken 1st of each month · Each cell = performance of the previous month · Total = compounded annual return</p>
+  </div>
+
+  <!-- ── TWO-TAB TABLE ── -->
+  <div class="table-card">
+    <div class="table-top">
+      <button class="ttab active" id="ttab-pos" onclick="showTab('pos')">Positions</button>
+      <button class="ttab" id="ttab-strat" onclick="showTab('strat')">Strategies (V9)</button>
+      <div class="tab-sep"></div>
+      <span style="font-size:.68rem;color:var(--muted)">Mar 2026 · $100M AUM</span>
+    </div>
+
+    <!-- ── POSITIONS TAB (BB8-style) ── -->
+    <div class="tab-pane active" id="pane-pos">
+      <div class="table-toolbar">
+        <input type="text" id="pos-search" placeholder="🔍  Search token / protocol…" style="width:210px">
+        <select id="pos-filter-method"><option value="">All methods</option></select>
+        <select id="pos-filter-proto"><option value="">All protocols</option></select>
+        <span class="tcount" id="pos-tcount">— positions</span>
+      </div>
+      <div class="tbl-wrap">
+        <table id="pos-table">
+          <thead>
+            <tr>
+              <th data-col="token" data-tbl="pos">Token</th>
+              <th data-col="tok_simple" data-tbl="pos">Simplified</th>
+              <th data-col="chain" data-tbl="pos">Chain</th>
+              <th data-col="method" data-tbl="pos">Method</th>
+              <th data-col="protocol" data-tbl="pos">Protocol</th>
+              <th data-col="val_p" data-tbl="pos" style="text-align:right">Val (prev $)</th>
+              <th data-col="val_a" data-tbl="pos" style="text-align:right">Val (act $)</th>
+              <th data-col="pct_a" data-tbl="pos" style="text-align:right">% (act)</th>
+              <th data-col="apy" data-tbl="pos" style="text-align:right">APY</th>
+              <th data-col="strategy" data-tbl="pos">Strategy</th>
+              <th data-col="comment" data-tbl="pos">Comment</th>
+            </tr>
+          </thead>
+          <tbody id="pos-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── STRATEGIES TAB (V9) ── -->
+    <div class="tab-pane" id="pane-strat">
+      <div class="table-toolbar">
+        <input type="text" id="strat-search" placeholder="🔍  Search strategy / protocol…" style="width:210px">
+        <select id="strat-filter-method"><option value="">All methods</option></select>
+        <select id="strat-filter-risk"><option value="">All risk bands</option></select>
+        <span class="tcount" id="strat-tcount">20 strategies</span>
+      </div>
+      <div class="tbl-wrap">
+        <table id="strat-table">
+          <thead>
+            <tr>
+              <th data-col="num" data-tbl="strat">#</th>
+              <th data-col="name" data-tbl="strat">Strategy</th>
+              <th data-col="protocol" data-tbl="strat">Protocol</th>
+              <th data-col="chain" data-tbl="strat">Chain</th>
+              <th data-col="base_asset" data-tbl="strat">Base Asset</th>
+              <th data-col="method" data-tbl="strat">Method</th>
+              <th data-col="grs" data-tbl="strat" style="text-align:right">gRS (/5)</th>
+              <th data-col="risk_band" data-tbl="strat">Risk Band</th>
+              <th data-col="yield_pct" data-tbl="strat" style="text-align:right">Est. Yield</th>
+              <th data-col="alloc_pct" data-tbl="strat" style="text-align:right">Target Alloc</th>
+              <th data-col="current_pct" data-tbl="strat" style="text-align:right">Current Alloc</th>
+              <th data-col="val_a" data-tbl="strat" style="text-align:right">Value ($)</th>
+            </tr>
+          </thead>
+          <tbody id="strat-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>IG11 Capital · Portfolio Dashboard V5 · IG11 Portfolio Allocation v9.0 · Mar 2026 · AUM $100M</footer>
+
+<script>
+Chart.defaults.color = '#E6EDF3';
+const AUM = 100000000;
+
+// ── ALL 20 STRATEGIES ─────────────────────────────────────────────────────────
+const STRATEGIES = [
+  {num:1,  name:"Sky DSR",             tok_simple:"sDAI/USDS",  base_asset:"USDS",  chain:"Ethereum", method:"lending",       protocol:"Sky/Maker",       grs:1.00, yield_pct:8.50,  alloc_pct:8.167, current_pct:7.90, comment:"Conservative DSR rate — very liquid"},
+  {num:2,  name:"Aave v3 USDC",        tok_simple:"aUSDC",      base_asset:"USDC",  chain:"Ethereum", method:"lending",       protocol:"Aave",            grs:3.10, yield_pct:10.50, alloc_pct:3.879, current_pct:4.10, comment:"Aave v3 supply USDC"},
+  {num:3,  name:"Aave v3 USDT",        tok_simple:"aUSDT",      base_asset:"USDT",  chain:"Ethereum", method:"lending",       protocol:"Aave",            grs:1.30, yield_pct:9.00,  alloc_pct:7.554, current_pct:8.00, comment:"Aave v3 supply USDT"},
+  {num:4,  name:"Spark DAI Savings",   tok_simple:"spDAI",      base_asset:"DAI",   chain:"Ethereum", method:"lending",       protocol:"SparkLend",       grs:1.40, yield_pct:12.00, alloc_pct:7.350, current_pct:7.10, comment:"Spark DAI savings rate"},
+  {num:5,  name:"Compound v3 USDC",    tok_simple:"cUSDC",      base_asset:"USDC",  chain:"Ethereum", method:"lending",       protocol:"Compound",        grs:2.40, yield_pct:11.00, alloc_pct:5.308, current_pct:5.80, comment:"Compound v3 USDC supply"},
+  {num:6,  name:"Morpho Blue USDC",    tok_simple:"mUSDC",      base_asset:"USDC",  chain:"Ethereum", method:"lending",       protocol:"Morpho",          grs:1.50, yield_pct:7.00,  alloc_pct:7.146, current_pct:6.70, comment:"Morpho Blue USDC curated vault"},
+  {num:7,  name:"Curve 3pool LP",      tok_simple:"3CRV",       base_asset:"USDC",  chain:"Ethereum", method:"farming",       protocol:"Curve",           grs:2.00, yield_pct:11.50, alloc_pct:6.125, current_pct:6.50, comment:"USDC/USDT/DAI 3pool LP"},
+  {num:8,  name:"Curve FRAX/USDC LP",  tok_simple:"crvFRAX",    base_asset:"FRAX",  chain:"Ethereum", method:"farming",       protocol:"Curve",           grs:2.10, yield_pct:14.00, alloc_pct:5.921, current_pct:5.50, comment:"Curve FRAX/USDC LP"},
+  {num:9,  name:"Yearn USDC Vault",    tok_simple:"yvUSDC",     base_asset:"USDC",  chain:"Ethereum", method:"farming",       protocol:"Yearn",           grs:2.30, yield_pct:13.50, alloc_pct:5.512, current_pct:5.90, comment:"Yearn v3 USDC auto-compounding vault"},
+  {num:10, name:"Convex crvUSD/USDC",  tok_simple:"cvxLP",      base_asset:"crvUSD",chain:"Ethereum", method:"farming",       protocol:"Convex",          grs:2.00, yield_pct:17.00, alloc_pct:6.125, current_pct:5.70, comment:"Convex boosted crvUSD/USDC LP"},
+  {num:11, name:"Euler Prime USDC",    tok_simple:"eUSDC",      base_asset:"USDC",  chain:"Ethereum", method:"lending",       protocol:"Euler",           grs:4.00, yield_pct:15.50, alloc_pct:2.042, current_pct:2.30, comment:"Euler Prime isolated market"},
+  {num:12, name:"Pendle PT-USDe",      tok_simple:"PT-USDe",    base_asset:"USDe",  chain:"Ethereum", method:"yield-trading", protocol:"Pendle",          grs:2.70, yield_pct:21.00, alloc_pct:4.696, current_pct:4.20, comment:"Fixed-rate USDe yield via PT"},
+  {num:13, name:"Notional Fixed USDC", tok_simple:"nUSDC",      base_asset:"USDC",  chain:"Ethereum", method:"fixed",         protocol:"Notional",        grs:2.50, yield_pct:16.00, alloc_pct:5.104, current_pct:5.60, comment:"Notional fixed-rate USDC lending"},
+  {num:14, name:"Radiant USDC",        tok_simple:"rUSDC",      base_asset:"USDC",  chain:"Arbitrum", method:"lending",       protocol:"Radiant",         grs:2.50, yield_pct:18.50, alloc_pct:5.104, current_pct:4.80, comment:"Radiant USDC on Arbitrum — higher yield"},
+  {num:15, name:"Clearpool Prime",     tok_simple:"cpUSDC",     base_asset:"USDC",  chain:"Ethereum", method:"credit",        protocol:"Clearpool",       grs:3.20, yield_pct:19.00, alloc_pct:3.675, current_pct:3.90, comment:"Clearpool institutional credit pool"},
+  {num:16, name:"Maple Finance USDC",  tok_simple:"mplUSDC",    base_asset:"USDC",  chain:"Ethereum", method:"credit",        protocol:"Maple",           grs:3.40, yield_pct:22.50, alloc_pct:3.267, current_pct:3.00, comment:"Maple institutional lending pool"},
+  {num:17, name:"Ethena sUSDe",        tok_simple:"sUSDe",      base_asset:"USDe",  chain:"Ethereum", method:"staking",       protocol:"Ethena",          grs:3.00, yield_pct:27.00, alloc_pct:4.083, current_pct:4.50, comment:"Ethena staked USDe — funding rate yield"},
+  {num:18, name:"Coinshift USPC Lev.", tok_simple:"USPC",       base_asset:"USDC",  chain:"Ethereum", method:"structured",    protocol:"Coinshift/Lagoon",grs:3.02, yield_pct:15.43, alloc_pct:4.042, current_pct:4.00, comment:"Gami leveraged vault on Lagoon · 5x max · IC Memo"},
+  {num:19, name:"Pendle YT-sUSDe",     tok_simple:"YT-sUSDe",  base_asset:"USDe",  chain:"Ethereum", method:"yield-trading", protocol:"Pendle",          grs:3.80, yield_pct:29.00, alloc_pct:2.450, current_pct:2.60, comment:"Yield token sUSDe — speculative upside"},
+  {num:20, name:"Aave GHO/USDC Loop",  tok_simple:"GHO",        base_asset:"GHO",   chain:"Ethereum", method:"leverage",      protocol:"Aave",            grs:3.80, yield_pct:26.00, alloc_pct:2.450, current_pct:1.90, comment:"Aave GHO/USDC recursive loop"},
+];
+
+// ── COINSHIFT IC MEMO SUB-POSITIONS ─────────────────────────────────────────
+const COINSHIFT_SUBS = [
+  {num:"CS1", tranche:"Liquidity Buffer",  pct_strat:10.0, token:"sUSDC",          tok_simple:"sUSDC",          method:"staking",       protocol:"Coinshift",          yield_pct:5.0,  comment:"USDC liquidity buffer · instant redemption"},
+  {num:"CS2", tranche:"Conservative",      pct_strat:16.0, token:"USCC",           tok_simple:"USCC",           method:"structured",    protocol:"Superstate",         yield_pct:5.2,  comment:"Superstate tokenized US T-bill fund (~40% of conservative)"},
+  {num:"CS3", tranche:"Conservative",      pct_strat:12.0, token:"SCOPE",          tok_simple:"SCOPE",          method:"structured",    protocol:"Hamilton Lane",       yield_pct:8.5,  comment:"Hamilton Lane tokenized private credit (~30% of conservative)"},
+  {num:"CS4", tranche:"Conservative",      pct_strat:8.0,  token:"ACRED",          tok_simple:"ACRED",          method:"structured",    protocol:"Apollo",             yield_pct:9.2,  comment:"Apollo tokenized credit (~20% of conservative)"},
+  {num:"CS5", tranche:"Leveraged",         pct_strat:26.5, token:"USPC/Morpho",    tok_simple:"USPC/Morph",     method:"leverage",      protocol:"Morpho + IPOR",      yield_pct:22.0, comment:"USPC collateral loop via IPOR · up to 5x leverage · LTV ≤85%"},
+  {num:"CS6", tranche:"Leveraged",         pct_strat:15.0, token:"PT-USPC",        tok_simple:"PT-USPC",        method:"yield-trading", protocol:"Pendle",             yield_pct:18.5, comment:"Fixed-rate USPC via Pendle PT · also LP-USPC"},
+  {num:"CS7", tranche:"Leveraged",         pct_strat:12.5, token:"yvcurve-USPC",   tok_simple:"yvcurve-USPC",   method:"farming",       protocol:"Curve/Spectra/StakeDAO", yield_pct:16.8, comment:"yvcurve-USPC/USDC LP via Spectra Finance · voting incentives"},
+];
+
+// ── POSITIONS (BB8-style) — 19 strategy positions + 7 Coinshift subs ────────
+// Val = current_pct * AUM (rounded). Px = $1.00 (all stablecoins). Qty = Val.
+// Inception: prev = actual.
+function buildPositions(){
+  const rows = [];
+  STRATEGIES.forEach(s => {
+    if(s.name === "Coinshift USPC Lev.") {
+      // Expand into 7 sub-positions
+      const totalVal = s.current_pct / 100 * AUM;
+      COINSHIFT_SUBS.forEach(cs => {
+        const val = Math.round(totalVal * cs.pct_strat / 100);
+        rows.push({
+          token: '[CoinS] ' + cs.token,
+          tok_simple: cs.tok_simple,
+          chain: "Ethereum",
+          method: cs.method,
+          protocol: cs.protocol,
+          val_p: val,
+          val_a: val,
+          pct_a: (val / AUM * 100),
+          apy: cs.yield_pct,
+          strategy: "Coinshift USPC Lev.",
+          comment: cs.comment,
+          is_coins: true,
+          tranche: cs.tranche,
+        });
+      });
+    } else {
+      const val = Math.round(s.current_pct / 100 * AUM);
+      rows.push({
+        token: s.tok_simple,
+        tok_simple: s.tok_simple,
+        chain: s.chain,
+        method: s.method,
+        protocol: s.protocol,
+        val_p: val,
+        val_a: val,
+        pct_a: s.current_pct,
+        apy: s.yield_pct,
+        strategy: s.name,
+        comment: s.comment,
+        is_coins: false,
+        tranche: null,
+      });
+    }
+  });
+  return rows;
+}
+const POSITIONS = buildPositions();
+
+// ── CHART DATA ─────────────────────────────────────────────────────────────
+const TOKEN_ALLOC = [
+  {label:"USDC",     value:35525000},
+  {label:"DAI/sDAI", value:15517000},
+  {label:"CRV LP",   value:18171000},
+  {label:"USDT",     value:7554000},
+  {label:"yvUSDC",   value:5512000},
+  {label:"PT-USDe",  value:4696000},
+  {label:"sUSDe",    value:4083000},
+  {label:"USPC",     value:4042000},
+  {label:"YT-sUSDe", value:2450000},
+  {label:"GHO",      value:2450000},
+];
+
+const PROTO_ALLOC = [
+  {label:"Aave",      value:13883000},
+  {label:"Curve",     value:12046000},
+  {label:"Sky/Maker", value:8167000},
+  {label:"SparkLend", value:7350000},
+  {label:"Morpho",    value:7146000},
+  {label:"Pendle",    value:7146000},
+  {label:"Convex",    value:6125000},
+  {label:"Compound",  value:5308000},
+  {label:"Yearn",     value:5512000},
+  {label:"Notional",  value:5104000},
+  {label:"Radiant",   value:5104000},
+  {label:"Ethena",    value:4083000},
+  {label:"Coinshift", value:4042000},
+  {label:"Clearpool", value:3675000},
+  {label:"Maple",     value:3267000},
+  {label:"Euler",     value:2042000},
+];
+
+// Abbreviated display names for bar chart axis (V9 order #1–20)
+const STRAT_SHORT = {
+  "Sky DSR":"Sky DSR", "Aave v3 USDC":"Aave USDC", "Aave v3 USDT":"Aave USDT",
+  "Spark DAI Savings":"Spark DAI", "Compound v3 USDC":"Compound", "Morpho Blue USDC":"Morpho",
+  "Curve 3pool LP":"Curve 3pool", "Curve FRAX/USDC LP":"Curve FRAX", "Yearn USDC Vault":"Yearn",
+  "Convex crvUSD/USDC":"Convex", "Euler Prime USDC":"Euler", "Pendle PT-USDe":"Pendle PT",
+  "Notional Fixed USDC":"Notional", "Radiant USDC":"Radiant", "Clearpool Prime":"Clearpool",
+  "Maple Finance USDC":"Maple", "Ethena sUSDe":"Ethena", "Coinshift USPC Lev.":"Coinshift",
+  "Pendle YT-sUSDe":"Pendle YT", "Aave GHO/USDC Loop":"Aave GHO"
+};
+// All 20 strategies in V9 order (#1–20)
+const STRAT_COMP = STRATEGIES.map(s => ({
+  token: STRAT_SHORT[s.name] || s.name,
+  target: s.alloc_pct,
+  current: s.current_pct
+}));
+
+// Protocols sorted to mirror the strategy order above (first protocol encountered per strategy, desc alloc)
+// Strategy order after sort: Sky DSR→Sky/Maker, Aave USDT→Aave, Spark DAI→SparkLend, Morpho→Morpho,
+// Curve 3pool→Curve, Convex→Convex, Yearn→Yearn, Compound→Compound, Notional→Notional,
+// Radiant→Radiant, Pendle PT→Pendle, Ethena→Ethena, Coinshift→Coinshift,
+// Aave USDC→(Aave done), Clearpool→Clearpool, Maple→Maple, Pendle YT→(Pendle done),
+// Aave GHO→(Aave done), Euler→Euler
+const PROTO_COMP = [
+  {token:"Sky/Maker", target:8.167,  current:7.90},   // Sky DSR — #1 strat
+  {token:"Aave",      target:13.883, current:14.00},   // Aave USDT — #2 strat (aggregated)
+  {token:"SparkLend", target:7.350,  current:7.10},    // Spark DAI — #3
+  {token:"Morpho",    target:7.146,  current:6.70},    // Morpho — #4
+  {token:"Curve",     target:12.046, current:12.00},   // Curve 3pool — #5
+  {token:"Convex",    target:6.125,  current:5.70},    // Convex — #6
+  {token:"Yearn",     target:5.512,  current:5.90},    // Yearn — #7
+  {token:"Compound",  target:5.308,  current:5.80},    // Compound — #8
+  {token:"Notional",  target:5.104,  current:5.60},    // Notional — #9
+  {token:"Radiant",   target:5.104,  current:4.80},    // Radiant — #10
+  {token:"Pendle",    target:7.146,  current:6.80},    // Pendle PT — #11
+  {token:"Ethena",    target:4.083,  current:4.50},    // Ethena — #12
+  {token:"Coinshift", target:4.042,  current:4.00},    // Coinshift — #13
+  {token:"Clearpool", target:3.675,  current:3.90},    // Clearpool — #15 (Aave USDC=done)
+  {token:"Maple",     target:3.267,  current:3.00},    // Maple — #16
+  {token:"Euler",     target:2.042,  current:2.30},    // Euler — #19
+];
+
+// Portfolio value: Mar 2026 actual + Apr–Dec projected at 1.143%/mo
+const PORT_HIST = (()=>{
+  const r = 1.01143;
+  const months = ['Mar 26','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26'];
+  let v = 100000000;
+  return months.map((m,i)=>{
+    const val = i===0 ? 100000000 : Math.round(v * Math.pow(r, i));
+    return {month:m, value:val, proj:i>0};
+  });
+})();
+
+// ── PRIVATE DEALS (10 slots) ─────────────────────────────────────────────────
+const DEALS = [
+  {
+    name:"COINSHIFT",subtitle:"USPC Leveraged Vault · IC Memo",
+    protocol:"Coinshift / Lagoon",vault_type:"Leveraged ERC-4626",
+    max_leverage:"5x",ltv:"≤ 85%",fee_perf:"20%",fee_mgmt:"0%",
+    yield_low:10.43,yield_mid:15.43,yield_high:20.32,
+    allocation:4042000,custody:"ForDefi (MPC)",status:"Active — Phase 1",
+    underlying:"USCC ~40% · SCOPE ~30% · ACRED ~20% · sUSDC ~10%",
+    chain:"Ethereum"
+  },
+  ...Array(9).fill(null).map((_,i)=>({coming_soon:true, slot:i+2}))
+];
+
+let currentDeal = 0;
+
+// ── COLORS ──────────────────────────────────────────────────────────────────
+const TOKEN_COLORS={
+  'usdc':'#58A6FF','dai/sdai':'#E3B341','crv lp':'#7B61FF',
+  'usdt':'#3FB950','yvusdc':'#5BC0EB','pt-usde':'#F778BA',
+  'susde':'#F97316','uspc':'#C084FC','yt-susde':'#FF7B72','gho':'#79C0FF'
+};
+const PROTO_COLORS={
+  'aave':'#B19CD8','curve':'#F97316','sky/maker':'#E3B341',
+  'morpho':'#58A6FF','pendle':'#F778BA','sparklend':'#FF7B72',
+  'convex':'#7B61FF','compound':'#00D395','notional':'#56D3C8',
+  'radiant':'#3FB950','yearn':'#5BC0EB','ethena':'#C084FC',
+  'coinshift':'#FFA657','clearpool':'#D2A8FF','maple':'#F0A500','euler':'#E05252'
+};
+const PALETTE=['#58A6FF','#F97316','#3FB950','#E3B341','#D2A8FF','#F778BA',
+  '#FF7B72','#FFA657','#56D3C8','#7B61FF','#C084FC','#79C0FF',
+  '#B19CD8','#F0A500','#5BC0EB','#E05252'];
+
+const charts = {};
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+const fmtM=v=>{
+  if(v==null)return'—';
+  const abs=Math.abs(v),s=v<0?'-':'';
+  if(abs>=1e9)return s+'$'+(abs/1e9).toFixed(2)+'B';
+  if(abs>=1e6)return s+'$'+(abs/1e6).toFixed(2)+'M';
+  if(abs>=1e3)return s+'$'+(abs/1e3).toFixed(1)+'K';
+  return s+'$'+Math.round(abs).toLocaleString();
+};
+const fmt$=v=>v==null?'—':(v<0?'-$':'$')+Math.abs(Math.round(v)).toLocaleString();
+const fmtPct=(v,d=2)=>v==null?'—':v.toFixed(d)+'%';
+
+function getRiskBand(g){
+  if(g<=1.5)return{label:'Conservative',cls:'risk-cons'};
+  if(g<=2.5)return{label:'Moderate',cls:'risk-mod'};
+  if(g<=3.5)return{label:'Aggressive',cls:'risk-agg'};
+  return{label:'Speculative',cls:'risk-spec'};
+}
+function methodBadge(m){
+  const map={
+    'lending':'b-lending','farming':'b-farming','yield-trading':'b-yield-trading',
+    'staking':'b-staking','structured':'b-structured','leverage':'b-leverage',
+    'fixed':'b-fixed','credit':'b-credit'
+  };
+  return`<span class="badge ${map[m]||'b-lending'}">${m||'—'}</span>`;
+}
+
+// ── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs(){
+  const pos = STRATEGIES;
+  const band=(lo,hi)=>pos.filter(p=>p.grs>lo&&p.grs<=hi).reduce((s,p)=>s+p.alloc_pct,0);
+  const wtdYield = pos.reduce((s,p)=>s+(p.yield_pct*p.alloc_pct/100),0);
+  const kpis=[
+    {label:'Monthly Yield (CAGR)',  main:fmtPct(1.143),  cls:'pos'},
+    {label:'CAGR (V9 Weighted)',    main:fmtPct(14.64),  cls:'pos'},
+    {label:'Wtd. Est. Yield',       main:fmtPct(wtdYield,1), cls:'pos'},
+    {label:'Liquidity Buffer',      main:'15.72%',        cls:'neu'},
+    {label:'Sharpe TradFi',         main:'4.05',          cls:'pos'},
+    {label:'Sharpe DeFi',           main:'2.25',          cls:'neu'},
+    {label:'Strategies / Protocols',main:'20 / 16',       cls:'neu'},
+    {label:'Conservative (≤1.5)',   main:fmtPct(band(0,1.5)), cls:'pos'},
+    {label:'Moderate (1.5–2.5)',    main:fmtPct(band(1.5,2.5)),cls:'warn'},
+    {label:'Aggressive (2.5–3.5)',  main:fmtPct(band(2.5,3.5)),cls:'warn'},
+    {label:'Speculative (>3.5)',    main:fmtPct(band(3.5,5)),   cls:'neg'},
+    {label:'Max Leverage',          main:'5× (Coinshift)',cls:'warn'},
+  ];
+  document.getElementById('kpi-row').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-vals">
+        <span class="kpi-main ${k.cls}">${k.main}</span>
+        ${k.prev?`<span class="kpi-prev">${k.prev}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ── DOUGHNUT ────────────────────────────────────────────────────────────────
+function buildPie(id,items,colorMap){
+  if(charts[id])charts[id].destroy();
+  const ctx=document.getElementById(id);if(!ctx||!items?.length)return;
+  const labels=items.map(d=>d.label),values=items.map(d=>d.value);
+  const total=values.reduce((a,b)=>a+b,0);
+  const colors=labels.map((l,i)=>(colorMap&&colorMap[l.toLowerCase()])||PALETTE[i%PALETTE.length]);
+  charts[id]=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:'#161B22',borderWidth:2,hoverOffset:6}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'44%',
+      layout:{padding:4},
+      plugins:{
+        legend:{
+          display:true,
+          position:'right',
+          labels:{
+            color:'#E6EDF3',
+            font:{size:10.5},
+            boxWidth:10,
+            boxHeight:10,
+            padding:6,
+            generateLabels:(chart)=>{
+              const ds=chart.data.datasets[0];
+              const tot=ds.data.reduce((a,b)=>a+b,0);
+              return chart.data.labels.map((lbl,i)=>({
+                text:`${lbl}  ${(ds.data[i]/tot*100).toFixed(1)}%`,
+                fillStyle:ds.backgroundColor[i],
+                strokeStyle:ds.backgroundColor[i],
+                fontColor:'#E6EDF3',
+                lineWidth:0,hidden:false,index:i,
+              }));
+            }
+          },
+          onHover:(e,item,legend)=>{
+            legend.chart.canvas.style.cursor='pointer';
+          },
+          onLeave:(e,item,legend)=>{
+            legend.chart.canvas.style.cursor='default';
+          },
+        },
+        datalabels:{
+          anchor:'center',align:'center',
+          color:'#fff',
+          font:(c)=>{
+            const p=c.dataset.data[c.dataIndex]/total*100;
+            return{size:p>=10?9:8,weight:'bold'};
+          },
+          display:(c)=>c.dataset.data[c.dataIndex]/total*100>=7,
+          formatter:(v)=>(v/total*100).toFixed(1)+'%',
+        },
+        tooltip:{
+          callbacks:{
+            label:c=>{
+              const t=c.dataset.data.reduce((a,b)=>a+b,0);
+              return`  ${c.label}: ${fmtM(c.parsed)} · ${(c.parsed/t*100).toFixed(1)}%`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── PORTFOLIO VALUE BAR ─────────────────────────────────────────────────────
+function buildPortBar(){
+  if(charts['cp'])charts['cp'].destroy();
+  const ctx=document.getElementById('chart-port');if(!ctx)return;
+  const labels = PORT_HIST.map(d=>d.month);
+  const values = PORT_HIST.map(d=>d.value);
+  const bgColors = PORT_HIST.map((d,i)=>
+    i===0 ? 'rgba(249,115,22,0.9)' : 'rgba(249,115,22,0.22)'
+  );
+  const borderColors = PORT_HIST.map((d,i)=>
+    i===0 ? '#F97316' : 'rgba(249,115,22,0.5)'
+  );
+  const momPct = PORT_HIST.map((d,i)=>
+    i===0 ? null : 1.143
+  );
+  charts['cp']=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'AUM',data:values,backgroundColor:bgColors,borderColor:borderColors,
+        borderWidth:1,borderRadius:3,yAxisID:'y'},
+      {label:'MoM%',type:'line',data:momPct,borderColor:'#E3B341',borderWidth:1.5,
+        pointRadius:2,pointBackgroundColor:'#E3B341',fill:false,
+        yAxisID:'y2',spanGaps:false,borderDash:[0]}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},datalabels:{display:false},
+        annotation:{},
+        tooltip:{callbacks:{
+          label:c=>c.dataset.label==='MoM%'
+            ? (c.parsed.y!==null?` +${c.parsed.y.toFixed(2)}% MoM (projected)`:'')
+            : ` ${fmtM(c.parsed.y)}${c.dataIndex>0?' (proj)':' (actual)'}`
+        }}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7D8590',font:{size:7.5},maxRotation:40}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},
+          ticks:{color:'#7D8590',font:{size:7.5},callback:v=>'$'+(v/1e6).toFixed(0)+'M'},
+          min:95000000},
+        y2:{position:'right',grid:{drawOnChartArea:false},
+          ticks:{color:'#E3B341',font:{size:7},callback:v=>(v>0?'+':'')+v.toFixed(1)+'%'},
+          min:0,max:2}
+      }
+    }
+  });
+}
+
+// ── COMPARISON BAR ──────────────────────────────────────────────────────────
+function buildCompBar(id,items){
+  if(charts[id])charts[id].destroy();
+  const ctx=document.getElementById(id);if(!ctx||!items?.length)return;
+  const labels=items.map(d=>d.token);
+  const targets=items.map(d=>+d.target.toFixed(2));
+  const currents=items.map(d=>+d.current.toFixed(2));
+  const isMany = items.length > 10; // true for the 20-strategy chart
+  charts[id]=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Target', data:targets,  backgroundColor:'rgba(88,166,255,0.6)',borderColor:'#58A6FF',borderWidth:1,borderRadius:2},
+      {label:'Current',data:currents, backgroundColor:'rgba(255,123,114,0.65)',borderColor:'#FF7B72',borderWidth:1,borderRadius:2},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},datalabels:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(2)}%`}}
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(255,255,255,.04)'},
+          ticks:{
+            color:'#7D8590',
+            font:{size: isMany ? 8 : 9},
+            maxRotation: isMany ? 50 : 35,
+            minRotation: isMany ? 50 : 0,
+          }
+        },
+        y:{grid:{color:'rgba(255,255,255,.04)'},
+          ticks:{color:'#7D8590',font:{size:8.5},callback:v=>v+'%'}}
+      },
+      barPercentage: isMany ? 0.8 : 0.75,
+      categoryPercentage: isMany ? 0.75 : 0.8,
+    }
+  });
+}
+
+// ── PRIVATE DEALS ───────────────────────────────────────────────────────────
+function renderDeal(){
+  const d = DEALS[currentDeal];
+  document.getElementById('deal-count').textContent=`${currentDeal+1}/${DEALS.length}`;
+  if(d.coming_soon){
+    document.getElementById('deal-content').innerHTML=`
+      <div class="coming-soon">
+        <div class="cs-icon">🔒</div>
+        <div class="cs-title">Coming Soon</div>
+        <div class="cs-sub">Private Deal Slot ${d.slot} / 10</div>
+      </div>`;
+    return;
+  }
+  document.getElementById('deal-content').innerHTML=`
+    <div class="deal-name">${d.name}</div>
+    <div class="deal-sub">${d.subtitle}</div>
+    <div class="deal-row"><span class="d-label">Protocol</span><span class="d-val neu">${d.protocol}</span></div>
+    <div class="deal-row"><span class="d-label">Vault Type</span><span class="d-val">${d.vault_type}</span></div>
+    <div class="deal-row"><span class="d-label">Chain</span><span class="d-val">${d.chain}</span></div>
+    <div class="deal-row"><span class="d-label">Max Leverage</span><span class="d-val warn">${d.max_leverage}</span></div>
+    <div class="deal-row"><span class="d-label">LTV (max)</span><span class="d-val">${d.ltv}</span></div>
+    <div class="deal-row"><span class="d-label">Fees (Perf / Mgmt)</span><span class="d-val">${d.fee_perf} / ${d.fee_mgmt}</span></div>
+    <div class="deal-row"><span class="d-label">Est. Yield</span><span class="d-val">
+      <span class="yield-badge yield-low">${d.yield_low.toFixed(2)}%</span>
+      <span class="yield-badge yield-mid">${d.yield_mid.toFixed(2)}%</span>
+      <span class="yield-badge yield-high">${d.yield_high.toFixed(2)}%</span>
+    </span></div>
+    <div class="deal-row"><span class="d-label">IG11 Allocation</span><span class="d-val pos">${fmtM(d.allocation)}</span></div>
+    <div class="deal-row"><span class="d-label">Custody</span><span class="d-val" style="color:var(--muted)">${d.custody}</span></div>
+    <div class="deal-row"><span class="d-label">Status</span><span class="d-val warn">${d.status}</span></div>
+    <div class="deal-row" style="align-items:flex-start"><span class="d-label">Underlying</span>
+      <span class="d-val" style="color:var(--muted);font-size:.62rem;max-width:180px;text-align:right;white-space:normal">${d.underlying}</span>
+    </div>
+  `;
+}
+function prevDeal(){currentDeal=(currentDeal-1+DEALS.length)%DEALS.length;renderDeal();}
+function nextDeal(){currentDeal=(currentDeal+1)%DEALS.length;renderDeal();}
+
+// ── TRACK RECORD ────────────────────────────────────────────────────────────
+function renderTrackRecord(){
+  const rows=[{year:2026, months:[null,null,'incept',null,null,null,null,null,null,null,null,null]}];
+  const YEAR_COLORS={2026:'#F97316'};
+  document.getElementById('tr-body').innerHTML=rows.map(r=>{
+    const yc=YEAR_COLORS[r.year]||'#7D8590';
+    const cells=r.months.map(m=>{
+      if(m===null)return`<td><span style="color:#30363D">—</span></td>`;
+      if(m==='incept')return`<td><span style="color:var(--amber);font-weight:600;font-size:.72rem">Incept.</span></td>`;
+      const c=parseFloat(m);
+      return`<td><span style="color:${c>=0?'var(--green)':'var(--muted)'}">${c>=0?'▲ ':'-'}${Math.abs(c).toFixed(2)}%</span></td>`;
+    }).join('');
+    return`<tr>
+      <td class="tr-year-cell" style="border-left:3px solid ${yc}">
+        <strong style="color:${yc}">${r.year}</strong>
+      </td>
+      ${cells}
+      <td class="tr-total-cell"><span style="color:${yc};font-weight:700">—</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TABLE TABS ───────────────────────────────────────────────────────────────
+function showTab(tab){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  document.getElementById('ttab-'+tab).classList.add('active');
+}
+
+// ── POSITIONS TABLE ──────────────────────────────────────────────────────────
+let posSortCol='pct_a', posSortDir=-1;
+
+function initPosFilters(){
+  const methods=[...new Set(POSITIONS.map(p=>p.method).filter(Boolean))].sort();
+  const protos=[...new Set(POSITIONS.map(p=>p.protocol).filter(Boolean))].sort();
+  const fm=document.getElementById('pos-filter-method');
+  const fp=document.getElementById('pos-filter-proto');
+  fm.innerHTML='<option value="">All methods</option>'+methods.map(v=>`<option value="${v}">${v}</option>`).join('');
+  fp.innerHTML='<option value="">All protocols</option>'+protos.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+
+function getPosFiltered(){
+  const q=document.getElementById('pos-search').value.toLowerCase();
+  const fm=document.getElementById('pos-filter-method').value;
+  const fp=document.getElementById('pos-filter-proto').value;
+  return POSITIONS.filter(p=>{
+    if(fm&&p.method!==fm)return false;
+    if(fp&&p.protocol!==fp)return false;
+    if(q&&![p.token,p.tok_simple,p.chain,p.method,p.protocol,p.strategy,p.comment].join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+
+function renderPosTable(){
+  const rows=[...getPosFiltered()].sort((a,b)=>{
+    const va=a[posSortCol]??0, vb=b[posSortCol]??0;
+    return typeof va==='string'?va.localeCompare(vb)*posSortDir:(va-vb)*posSortDir;
+  });
+  const total=rows.reduce((s,p)=>s+p.pct_a,0);
+  document.getElementById('pos-tcount').textContent=
+    `${rows.length} positions · ${fmtPct(total)} alloc · ${fmtM(total*AUM/100)}`;
+
+  document.getElementById('pos-body').innerHTML=rows.map(p=>{
+    const yc=p.apy>=20?'var(--orange)':p.apy>=12?'var(--yellow)':'var(--green)';
+    const coinsTag = p.is_coins ? `<span class="coins-tag">CoinS</span>` : '';
+    const trancheBadge = p.tranche ? {
+      'Liquidity Buffer':`<span class="tranche-badge tr-liq">${p.tranche}</span>`,
+      'Conservative':`<span class="tranche-badge tr-cons">${p.tranche}</span>`,
+      'Leveraged':`<span class="tranche-badge tr-lev">${p.tranche}</span>`,
+    }[p.tranche]||'' : '';
+    const tokenCell = p.is_coins
+      ? `${coinsTag}<span style="color:var(--purple)">${p.token.replace('[CoinS] ','')}</span>`
+      : `<span style="font-weight:600">${p.token}</span>`;
+    return`<tr${p.is_coins?' style="background:rgba(192,132,252,.04)"':''}>
+      <td>${tokenCell}</td>
+      <td style="color:var(--amber)">${p.tok_simple}</td>
+      <td style="color:var(--muted);font-size:.72rem">${p.chain}</td>
+      <td>${methodBadge(p.method)}</td>
+      <td style="color:var(--muted);font-size:.72rem">${p.protocol}</td>
+      <td class="val-col" style="color:var(--muted)">${fmtM(p.val_p)}</td>
+      <td class="val-col">${fmtM(p.val_a)}</td>
+      <td class="pct-col" style="color:var(--blue)">${fmtPct(p.pct_a)}</td>
+      <td class="pct-col" style="color:${yc};font-weight:600">${fmtPct(p.apy)}</td>
+      <td style="color:var(--muted);font-size:.71rem">${p.strategy}${trancheBadge?' · '+trancheBadge:''}</td>
+      <td style="color:var(--muted);max-width:190px;overflow:hidden;text-overflow:ellipsis" title="${p.comment}">${p.comment}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Sort headers for positions table
+document.querySelectorAll('#pos-table thead th[data-col]').forEach(th=>{
+  th.onclick=()=>{
+    const col=th.dataset.col;
+    if(posSortCol===col)posSortDir*=-1;else{posSortCol=col;posSortDir=-1;}
+    document.querySelectorAll('#pos-table thead th').forEach(h=>h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(posSortDir===1?'sort-asc':'sort-desc');
+    renderPosTable();
+  };
+});
+['pos-search','pos-filter-method','pos-filter-proto'].forEach(id=>
+  document.getElementById(id)?.addEventListener('input',renderPosTable));
+
+// ── STRATEGIES TABLE ─────────────────────────────────────────────────────────
+let stratSortCol='num', stratSortDir=1;
+
+function initStratFilters(){
+  const methods=[...new Set(STRATEGIES.map(p=>p.method).filter(Boolean))].sort();
+  const fm=document.getElementById('strat-filter-method');
+  fm.innerHTML='<option value="">All methods</option>'+methods.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('strat-filter-risk').innerHTML=
+    '<option value="">All risk bands</option>'+
+    ['Conservative','Moderate','Aggressive','Speculative'].map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+
+function getStratFiltered(){
+  const q=document.getElementById('strat-search').value.toLowerCase();
+  const fm=document.getElementById('strat-filter-method').value;
+  const fr=document.getElementById('strat-filter-risk').value;
+  return STRATEGIES.filter(p=>{
+    if(fm&&p.method!==fm)return false;
+    if(fr&&getRiskBand(p.grs).label!==fr)return false;
+    if(q&&![p.name,p.tok_simple,p.chain,p.method,p.protocol,p.comment].join(' ').toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+
+function renderStratTable(){
+  const rows=[...getStratFiltered()].sort((a,b)=>{
+    const va=a[stratSortCol]??(typeof a[stratSortCol]==='string'?'':0);
+    const vb=b[stratSortCol]??(typeof b[stratSortCol]==='string'?'':0);
+    return typeof va==='string'?va.localeCompare(vb)*stratSortDir:(va-vb)*stratSortDir;
+  });
+  const ta=rows.reduce((s,p)=>s+p.alloc_pct,0);
+  document.getElementById('strat-tcount').textContent=
+    `${rows.length} strategies · ${fmtPct(ta)} target · ${fmtM(ta*AUM/100)}`;
+
+  document.getElementById('strat-body').innerHTML=rows.map(p=>{
+    const rb=getRiskBand(p.grs);
+    const gc=p.grs<=1.5?'var(--green)':p.grs<=2.5?'var(--yellow)':p.grs<=3.5?'var(--orange)':'var(--red)';
+    const yc=p.yield_pct>=20?'var(--orange)':p.yield_pct>=12?'var(--yellow)':'var(--green)';
+    const isCoinshift = p.name==="Coinshift USPC Lev.";
+    const mainRow = `<tr class="${isCoinshift?'expandable-row':''}" ${isCoinshift?'onclick="toggleCoinshift()"':''}>
+      <td style="color:var(--muted);font-size:.72rem">${p.num}</td>
+      <td style="font-weight:600${isCoinshift?';color:var(--purple)':''}">${p.name}${isCoinshift?` <span style="font-size:.6rem;color:var(--muted);font-weight:400">IC Memo ↗</span>`:''}
+      </td>
+      <td style="color:var(--muted);font-size:.72rem">${p.protocol}</td>
+      <td style="color:var(--muted);font-size:.72rem">${p.chain}</td>
+      <td style="color:var(--amber)">${p.base_asset}</td>
+      <td>${methodBadge(p.method)}</td>
+      <td class="val-col" style="color:${gc};font-weight:600">${p.grs.toFixed(2)}</td>
+      <td class="${rb.cls}">${rb.label}</td>
+      <td class="pct-col" style="color:${yc};font-weight:600">${fmtPct(p.yield_pct)}</td>
+      <td class="pct-col" style="color:var(--blue)">${fmtPct(p.alloc_pct)}</td>
+      <td class="pct-col" style="color:var(--orange)">${fmtPct(p.current_pct)}</td>
+      <td class="val-col">${fmtM(p.current_pct*AUM/100)}</td>
+    </tr>`;
+
+    if(!isCoinshift) return mainRow;
+
+    // Expandable Coinshift detail row
+    const detailRow = `<tr class="detail-row" id="coinshift-detail">
+      <td class="detail-cell" colspan="12">
+        <div class="detail-inner">
+          <div class="detail-title">◆ Coinshift USPC Leveraged Vault — IC Memo · 7 Sub-Positions · 3 Tranches</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+            <div style="background:rgba(88,166,255,.07);border:1px solid rgba(88,166,255,.2);border-radius:6px;padding:7px 10px">
+              <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Liquidity Buffer</div>
+              <div style="font-size:.85rem;font-weight:700;color:var(--blue)">10%</div>
+              <div style="font-size:.6rem;color:var(--muted);margin-top:2px">sUSDC · instant redemption</div>
+            </div>
+            <div style="background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.2);border-radius:6px;padding:7px 10px">
+              <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Conservative Tranche</div>
+              <div style="font-size:.85rem;font-weight:700;color:var(--green)">40%</div>
+              <div style="font-size:.6rem;color:var(--muted);margin-top:2px">USCC · SCOPE · ACRED · sUSDC</div>
+            </div>
+            <div style="background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:6px;padding:7px 10px">
+              <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Leveraged Tranche</div>
+              <div style="font-size:.85rem;font-weight:700;color:var(--red)">50%</div>
+              <div style="font-size:.6rem;color:var(--muted);margin-top:2px">Morpho loop · Pendle · Curve</div>
+            </div>
+          </div>
+          <table class="detail-table">
+            <thead><tr>
+              <th>#</th><th>Asset / Position</th><th>Protocol</th><th>Tranche</th>
+              <th style="text-align:right">% of Strategy</th>
+              <th style="text-align:right">Value ($)</th>
+              <th style="text-align:right">Est. Yield</th>
+              <th>Description</th>
+            </tr></thead>
+            <tbody>
+              ${COINSHIFT_SUBS.map((cs,i)=>{
+                const val = Math.round(p.current_pct/100*AUM * cs.pct_strat/100);
+                const tbadge = {
+                  'Liquidity Buffer':'<span class="tranche-badge tr-liq">Liquidity Buffer</span>',
+                  'Conservative':'<span class="tranche-badge tr-cons">Conservative</span>',
+                  'Leveraged':'<span class="tranche-badge tr-lev">Leveraged</span>',
+                }[cs.tranche];
+                const yc2=cs.yield_pct>=20?'var(--orange)':cs.yield_pct>=12?'var(--yellow)':'var(--green)';
+                return`<tr>
+                  <td style="color:var(--muted)">${i+1}</td>
+                  <td style="font-weight:600;color:var(--purple)">${cs.token}</td>
+                  <td style="color:var(--muted)">${cs.protocol}</td>
+                  <td>${tbadge}</td>
+                  <td style="text-align:right;color:var(--blue)">${cs.pct_strat.toFixed(1)}%</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">${fmtM(val)}</td>
+                  <td style="text-align:right;color:${yc2};font-weight:600">${fmtPct(cs.yield_pct)}</td>
+                  <td style="color:var(--muted);font-size:.7rem;max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${cs.comment}">${cs.comment}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top:8px;font-size:.62rem;color:var(--muted)">
+            Custody: ForDefi (MPC) · Max Leverage: 5× · LTV ≤ 85% · Fees: 20% perf / 0% mgmt ·
+            Yield: <span style="color:var(--green)">Low 10.43%</span> /
+            <span style="color:var(--orange)">Mid 15.43%</span> /
+            <span style="color:var(--red)">High 20.32%</span>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+    return mainRow + detailRow;
+  }).join('');
+
+  // Re-attach sort after re-render
+  document.querySelectorAll('#strat-table thead th[data-col]').forEach(th=>{
+    th.onclick=()=>{
+      const col=th.dataset.col;
+      if(stratSortCol===col)stratSortDir*=-1;else{stratSortCol=col;stratSortDir=-1;}
+      document.querySelectorAll('#strat-table thead th').forEach(h=>h.classList.remove('sort-asc','sort-desc'));
+      th.classList.add(stratSortDir===1?'sort-asc':'sort-desc');
+      renderStratTable();
+    };
+  });
+}
+
+function toggleCoinshift(){
+  const row = document.querySelector('.expandable-row');
+  const detail = document.getElementById('coinshift-detail');
+  if(row) row.classList.toggle('open');
+  if(detail) detail.classList.toggle('open');
+}
+
+document.querySelectorAll('#strat-table thead th[data-col]').forEach(th=>{
+  th.onclick=()=>{
+    const col=th.dataset.col;
+    if(stratSortCol===col)stratSortDir*=-1;else{stratSortCol=col;stratSortDir=-1;}
+    document.querySelectorAll('#strat-table thead th').forEach(h=>h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(stratSortDir===1?'sort-asc':'sort-desc');
+    renderStratTable();
+  };
+});
+['strat-search','strat-filter-method','strat-filter-risk'].forEach(id=>
+  document.getElementById(id)?.addEventListener('input',renderStratTable));
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  renderKPIs();
+  buildPie('chart-token',    TOKEN_ALLOC, TOKEN_COLORS);
+  buildPie('chart-protocol', PROTO_ALLOC, PROTO_COLORS);
+  buildPortBar();
+  buildCompBar('chart-strat-comp', STRAT_COMP);
+  buildCompBar('chart-proto-comp', PROTO_COMP);
+  renderTrackRecord();
+  initPosFilters();  renderPosTable();
+  initStratFilters(); renderStratTable();
+  renderDeal();
+}
+
+init();
+</script>
+</body>
+</html>
