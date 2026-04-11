@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IG11 Capital — Digital Asset Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Adamina&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #2B5CE6;
+      --blue-100:   #DBEAFE;
+      --text-dark:  #0F172A;
+      --text-body:  #334155;
+      --text-muted: #64748B;
+      --text-faint: rgba(30,41,59,0.33);
+      --text-mid:   rgba(30,41,59,0.53);
+      --border:     #E2E8F0;
+      --border-s:   rgba(203,213,225,0.35);
+      --amber:      #C8A84B;
+      --chart-gold: #C8A84B;
+      --chart-red:  #E05C5C;
+      --chart-blue: #4A90D9;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Adamina', Georgia, serif;
+      color: var(--text-dark);
+      overflow-x: hidden;
+      background: radial-gradient(ellipse 180% 120% at 50% -2%,
+        #C8E0FF 0%, #DBEAFE 20%, #F0F6FF 50%, #FFFFFF 80%);
+      background-attachment: fixed;
+    }
+
+    /* ── ANIMATIONS ── */
+    .reveal {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .reveal-sm {
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal-sm.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── NAV — transparent (Pencil: fill disabled) ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: rgba(240,246,255,0.72);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(203,213,225,0.45);
+      opacity: 0;
+      animation: navIn 0.5s cubic-bezier(0.16,1,0.3,1) 0ms forwards;
+    }
+    @keyframes navIn { to { opacity: 1; } }
+    .nav-logo {
+      font-family: 'Adamina', serif; font-size: 13px;
+      letter-spacing: 4px; color: var(--blue);
+      text-decoration: none; text-transform: uppercase;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
+    .btn-ghost {
+      padding: 10px 24px; border-radius: 100px;
+      border: 1px solid var(--border); background: transparent;
+      font-family: 'Adamina', serif; font-size: 13px;
+      color: var(--text-dark); cursor: pointer; text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-primary {
+      padding: 10px 24px; border-radius: 100px;
+      background: var(--blue); border: none;
+      font-family: 'Adamina', serif; font-size: 13px; font-weight: 600;
+      color: #fff; cursor: pointer; text-decoration: none;
+      transition: background .2s;
+    }
+    .btn-primary:hover { background: #1a48cc; }
+
+    /* ── HERO — transparent bg, page gradient shows ── */
+    #hero {
+      min-height: 780px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 80px 40px; text-align: center;
+      background: transparent;
+    }
+    .hero-eyebrow {
+      font-family: 'Adamina', serif; font-size: 16px; font-weight: 400;
+      letter-spacing: 4px; color: var(--blue); text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 100ms forwards;
+    }
+    /* Pencil: headline fontSize 52 */
+    .hero-h1 {
+      font-family: 'Playfair Display', serif; font-size: 52px;
+      font-weight: 400; line-height: 1.1; color: var(--text-dark);
+      margin-bottom: 20px;
+      opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 220ms forwards;
+    }
+    .hero-sub {
+      font-family: 'Adamina', serif; font-size: 19px; font-style: italic;
+      font-weight: 300; color: rgba(30,41,59,0.55); line-height: 1.7;
+      margin-bottom: 44px;
+      opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 400ms forwards;
+    }
+    .hero-stats {
+      display: flex; align-items: stretch; gap: 20px;
+      justify-content: center; width: 900px; max-width: 100%;
+      margin-bottom: 44px;
+      opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 560ms forwards;
+    }
+    /* Pencil stat cards: fill #ffffff00, stroke #E2E8F0, cornerRadius 0 */
+    .stat-card {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; padding: 28px 20px;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border); border-radius: 0;
+    }
+    .stat-num  { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700; color: var(--blue); }
+    .stat-big  { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--blue); }
+    .stat-label { font-family: 'Adamina', serif; font-size: 15px; color: var(--text-muted); letter-spacing: 0.5px; }
+    .hero-div {
+      width: 900px; max-width: 100%; height: 1px;
+      background: var(--border); margin-bottom: 28px;
+      opacity: 0; animation: fadeIn 0.5s ease 700ms forwards;
+    }
+    .hero-reg {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      width: 900px; max-width: 100%;
+      opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 740ms forwards;
+    }
+    .reg-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .reg-label { font-family: 'Adamina', serif; font-size: 13px; font-style: italic; color: var(--text-faint); }
+    .reg-val   { font-family: 'Adamina', serif; font-size: 16px; font-weight: 500; color: var(--text-mid); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── SECTIONS ── */
+    section {
+      width: 100%; position: relative;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 100px 80px; background: transparent;
+    }
+    section.pad-cta { padding: 80px 120px; }
+    section > * { position: relative; z-index: 1; }
+    section + section { border-top: 1px solid rgba(203,213,225,0.25); }
+
+    /* ── BACKGROUND BLOBS ── */
+    .page-blob {
+      position: fixed; border-radius: 50%;
+      pointer-events: none; z-index: 0;
+    }
+    .blob-a { width:700px; height:700px; right:-120px; top:28vh;
+      background: radial-gradient(ellipse, rgba(147,197,253,0.19) 0%, rgba(96,165,250,0) 70%); }
+    .blob-b { width:650px; height:650px; left:-160px; top:54vh;
+      background: radial-gradient(ellipse, rgba(96,165,250,0.16) 0%, rgba(96,165,250,0) 70%); }
+    .blob-c { width:580px; height:580px; right:-80px; top:80vh;
+      background: radial-gradient(ellipse, rgba(147,197,253,0.13) 0%, rgba(147,197,253,0) 70%); }
+
+    /* ── PILL LABELS ── */
+    .s-pill {
+      display: inline-flex; padding: 8px 20px; border-radius: 4px;
+      background: var(--blue-100); border: 1px solid rgba(43,92,230,0.13);
+      font-family: 'Adamina', serif; font-size: 11px; font-weight: 400;
+      letter-spacing: 2px; color: var(--blue); text-transform: uppercase;
+    }
+    .s-h2 {
+      font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 400;
+      color: var(--text-dark); text-align: center; max-width: 900px;
+      line-height: 1.25; margin-top: 16px;
+    }
+    .s-body {
+      font-family: 'Adamina', serif; font-size: 17px;
+      color: var(--text-body); line-height: 1.85; max-width: 825px; margin-top: 24px;
+    }
+    .s-body p + p { margin-top: 18px; }
+
+    /* ── SLOGAN SECTION (standalone, between hero and track record) ── */
+    #slogan-section {
+      padding: 80px 80px; min-height: unset;
+      justify-content: center;
+    }
+    .slogan-container {
+      position: relative; width: 900px; max-width: 100%;
+    }
+    .slogan-txt {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 400; font-style: italic;
+      line-height: 1.65; text-align: center; color: var(--text-dark);
+    }
+    /* SVG annotations layer */
+    .slogan-svg {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; overflow: visible;
+    }
+    /* annotation paths start hidden, revealed by JS */
+    .ann { opacity: 0; transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1); }
+    .ann.visible { opacity: 1; }
+
+    /* ── CHART ── */
+    .chart-wrap {
+      width: 100%; max-width: 1200px;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border); border-radius: 0;
+      padding: 32px; margin-top: 24px;
+    }
+    .chart-svg { width: 100%; height: auto; display: block; }
+    .c-legend { display: flex; gap: 28px; margin-top: 20px; flex-wrap: wrap; }
+    .c-leg-item { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 6px; transition: background .15s; }
+    .c-leg-swatch { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+    .c-leg-lbl { font-family: 'Adamina', serif; font-size: 12px; color: var(--text-muted); }
+
+    /* ── TABLE — redesigned with color-coded rows ── */
+    .perf-table {
+      width: 100%; max-width: 1200px; margin-top: 0;
+      border-collapse: collapse; font-family: 'Adamina', serif; font-size: 12px;
+    }
+    .perf-table th {
+      padding: 10px 8px; text-align: center;
+      font-size: 10px; letter-spacing: .5px; text-transform: uppercase;
+      color: var(--text-muted); border-bottom: 1px solid var(--border);
+      background: rgba(30,58,138,0.03);
+    }
+    .perf-table th:first-child { text-align: left; }
+    .perf-table td { padding: 11px 8px; text-align: center; }
+    .perf-table td:first-child { text-align: left; font-weight: 400; padding-left: 16px; }
+    .perf-table .c-total { font-weight: 700; }
+
+    /* Color-coded rows with left accent border + tinted bg */
+    .row-blue { background: rgba(74,144,217,0.08); border-left: 3px solid #4A90D9; }
+    .row-blue td { color: #4A90D9; }
+    .row-blue .c-total { color: #4A90D9; }
+
+    .row-red { background: rgba(224,92,92,0.08); border-left: 3px solid #E05C5C; }
+    .row-red td { color: #E05C5C; }
+    .row-red .c-total { color: #E05C5C; }
+
+    .row-gold { background: rgba(200,168,75,0.08); border-left: 3px solid #C8A84B; }
+    .row-gold td { color: #C8A84B; }
+    .row-gold .c-total { color: #C8A84B; font-weight: 700; }
+
+    /* ── TEAM CARDS — Pencil: white fill, cornerRadius 12 ── */
+    .t-photo {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #F1F5F9; border: 2px solid var(--border);
+      overflow: hidden; margin-bottom: 14px; flex-shrink: 0;
+    }
+    .t-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+    .t-card.gp .t-photo { width: 88px; height: 88px; }
+    .t-div { display: flex; align-items: center; gap: 20px; width: 100%; max-width: 1200px; margin: 24px 0 8px; }
+    .t-div-line { flex: 1; height: 1px; background: rgba(203,213,225,0.28); }
+    .t-div-label {
+      font-family: 'Geist', 'Adamina', sans-serif; font-size: 13px; font-weight: 500;
+      letter-spacing: 1px; color: rgba(30,41,59,0.4); text-transform: uppercase;
+    }
+    .t-gp  { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 1200px; }
+    .t-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; width: 100%; max-width: 1200px; }
+    /* Pencil: fill #FFFFFF, cornerRadius 12, stroke #E2E8F0 */
+    .t-card {
+      padding: 24px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #FFFFFF;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .t-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 400; color: var(--text-dark); margin-bottom: 4px; }
+    .t-role { font-family: 'Adamina', serif; font-size: 11px; color: var(--blue); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .t-bio  { font-family: 'Adamina', serif; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── VALUE PROP ── */
+    .vp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; width: 100%; max-width: 1200px; margin-top: 48px; }
+    .vp-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; text-align: center; padding: 32px 24px;
+      background: rgba(255,255,255,0.6); backdrop-filter: blur(6px);
+      border: 1px solid var(--border); border-radius: 0;
+    }
+    .vp-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: rgba(30,41,59,0.35); }
+    .vp-icon svg { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .vp-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 500; color: var(--text-dark); }
+    .vp-body  { font-family: 'Adamina', serif; font-size: 15px; color: var(--text-body); line-height: 1.75; }
+
+    /* ── FUND TABLE ── */
+    .fi-table {
+      width: 100%; max-width: 1200px;
+      border: 1px solid var(--border-s); border-radius: 8px;
+      overflow: hidden; margin-top: 24px;
+      background: rgba(255,255,255,0.65); backdrop-filter: blur(6px);
+    }
+    .fi-row { display: grid; grid-template-columns: 220px 1fr 220px 1fr; }
+    .fi-row + .fi-row { border-top: 1px solid var(--border-s); }
+    .fi-lbl { padding: 14px 20px; background: rgba(30,58,138,0.03); font-size: 12px; color: var(--text-muted); }
+    .fi-val  { padding: 14px 20px; font-size: 13px; color: var(--text-dark); border-left: 1px solid var(--border-s); }
+    .fi-lbl + .fi-lbl { border-left: 1px solid var(--border-s); }
+
+    /* ── CTA — Pencil: cornerRadius 20, fill #2B5CE6 ── */
+    #cta { border-top: 1px solid rgba(203,213,225,0.3); }
+    .cta-btn {
+      padding: 14px 40px; font-size: 15px; border-radius: 20px;
+      background: var(--blue); color: #fff; border: 1px solid var(--blue);
+      font-family: 'Adamina', serif; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s;
+    }
+    .cta-btn:hover { background: #1a48cc; }
+
+    /* ── FOOTER — Pencil: fill #0F172A08 ── */
+    footer {
+      background: rgba(15,23,42,0.05);
+      border-top: 1px solid var(--border-s);
+      padding: 48px 120px;
+    }
+    .f-logo { font-family: 'Adamina', serif; font-size: 13px; letter-spacing: 4px; color: var(--blue); text-transform: uppercase; margin-bottom: 6px; }
+    .f-addr { font-family: 'Adamina', serif; font-size: 12px; color: var(--text-muted); margin-bottom: 40px; }
+    .f-disc { border-top: 1px solid var(--border-s); padding-top: 24px; }
+    /* Pencil: single text node, color #94A3B8, fontSize 11 */
+    .f-disc-txt {
+      font-family: 'Adamina', serif; font-size: 11px; color: #94A3B8;
+      line-height: 1.65; white-space: pre-line;
+    }
+
+    /* ── MODAL ── */
+    .modal-ov { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(6px); z-index: 200; align-items: center; justify-content: center; }
+    .modal-ov.active { display: flex; }
+    .modal { background: #fff; border-radius: 0; padding: 48px; width: 100%; max-width: 420px; position: relative; box-shadow: 0 24px 64px rgba(0,0,0,0.1); }
+    .modal h2 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--text-dark); margin-bottom: 8px; }
+    .modal p { font-family: 'Adamina', serif; font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+    .fg { margin-bottom: 16px; }
+    .fg label { display: block; font-family: 'Adamina', serif; font-size: 11px; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .fg input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 0; font-family: 'Adamina', serif; font-size: 14px; color: var(--text-dark); outline: none; transition: border-color .2s; }
+    .fg input:focus { border-color: var(--blue); }
+    .m-err { font-family: 'Adamina', serif; font-size: 12px; color: #dc2626; margin-bottom: 12px; display: none; }
+    .m-btn { width: 100%; padding: 14px; border-radius: 0; background: var(--blue); border: none; color: #fff; font-family: 'Adamina', serif; font-size: 14px; cursor: pointer; margin-top: 8px; transition: background .2s; }
+    .m-btn:hover { background: #1a48cc; }
+    .m-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
+
+    @media (max-width: 900px) {
+      .hero-h1 { font-size: 36px; }
+      .t-gp, .t-row { grid-template-columns: 1fr 1fr; }
+      .fi-row { grid-template-columns: 1fr 1fr; }
+      .vp-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Page-level blobs (unclipped) -->
+<div class="page-blob blob-a"></div>
+<div class="page-blob blob-b"></div>
+<div class="page-blob blob-c"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">IG11 Capital</a>
+  <div class="nav-actions">
+    <a href="contact.html" class="btn-ghost">Request Information</a>
+    <button onclick="openModal()" class="btn-primary">Client Login</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-eyebrow">IG11 Capital</p>
+  <h1 class="hero-h1">Digital Asset Management</h1>
+  <p class="hero-sub">High Stablecoin Yield Strategies for Institutional Money</p>
+  <div class="hero-stats">
+    <div class="stat-card">
+      <span class="stat-num">28%</span>
+      <span class="stat-label">APY Delivered</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-big">Delta-Neutral</span>
+      <span class="stat-label">Market-Neutral Strategy</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-big">Institutional</span>
+      <span class="stat-label">Regulated &amp; Audited Fund</span>
+    </div>
+  </div>
+  <div class="hero-div"></div>
+  <div class="hero-reg">
+    <div class="reg-item"><span class="reg-label">Regulated by</span><span class="reg-val">FSC Mauritius</span></div>
+    <div class="reg-item"><span class="reg-label">Custodian</span><span class="reg-val">Warwyck Private Bank Ltd</span></div>
+    <div class="reg-item"><span class="reg-label">Audited by</span><span class="reg-val">Nexia Bakers &amp; Arenson</span></div>
+    <div class="reg-item"><span class="reg-label">Secured by</span><span class="reg-val">Fireblocks &amp; ForDeFi</span></div>
+  </div>
+</section>
+
+<!-- SLOGAN — standalone section, Pencil: Yarcv, between Hero and Track Record -->
+<section id="slogan-section">
+  <div class="slogan-container reveal">
+    <p class="slogan-txt" id="sloganTxt">
+      Natively designed to achieve a delta-neutral<br>
+      high-yield in USD with actively managed<br>
+      and diversified portfolio of stablecoin assets
+    </p>
+    <!-- Amber SVG annotations, revealed sequentially on scroll -->
+    <svg class="slogan-svg" viewBox="0 0 900 130" preserveAspectRatio="none">
+      <!-- Circle around "delta-neutral" — line 1 -->
+      <ellipse class="ann" id="ann1" cx="470" cy="22" rx="80" ry="17"
+        fill="none" stroke="#C8A84B" stroke-width="2.2"
+        style="transform-origin:470px 22px; transform:rotate(-2deg)"/>
+      <!-- Underline on "high-yield" — line 2 -->
+      <path class="ann" id="ann2"
+        d="M 340,62 C 354,58 368,64 382,60 C 396,57 408,62 420,60 C 432,58 444,63 458,61"
+        fill="none" stroke="#C8A84B" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- Underline on "stablecoin assets" — line 3 -->
+      <path class="ann" id="ann3"
+        d="M 515,100 C 532,96 549,102 566,98 C 583,95 600,101 617,98 C 634,96 648,101 663,99"
+        fill="none" stroke="#C8A84B" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+  </div>
+</section>
+
+<!-- TRACK RECORD -->
+<section id="track-record">
+  <span class="s-pill reveal">Track Record</span>
+  <h2 class="s-h2 reveal">Strategies Track Record</h2>
+  <p class="reveal" style="font-size:17px;color:var(--text-body);text-align:center;max-width:825px;line-height:1.8;margin-top:12px;">
+    Strategies on stable assets include lending on money markets, leveraging fixed income protocols to optimize yield, farming ecosystem points and governance incentives.
+  </p>
+
+  <!-- CHART — redesigned: 4 grid lines (0/10/20/30%), gradient areas, vertical month lines, triangles at endpoints -->
+  <div class="chart-wrap reveal-sm">
+    <svg id="track-chart" class="chart-svg" viewBox="0 0 1260 360" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- Gradient fills for chart areas -->
+        <linearGradient id="gradGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="15%" stop-color="#C8A84B" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#C8A84B" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="gradRed" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#E05C5C" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#E05C5C" stop-opacity="0.27"/>
+          <stop offset="100%" stop-color="#E05C5C" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4A90D9" stop-opacity="0"/>
+          <stop offset="65%" stop-color="#4A90D9" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#4A90D9" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="tt-shad">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
+        </filter>
+      </defs>
+
+      <!-- Y-axis labels: 30% at y=10, 20% at y=110, 10% at y=210, 0% at y=310 -->
+      <text x="188" y="14"  text-anchor="end" font-family="Adamina" font-size="12" fill="#64748B">30%</text>
+      <text x="188" y="114" text-anchor="end" font-family="Adamina" font-size="12" fill="#64748B">20%</text>
+      <text x="188" y="214" text-anchor="end" font-family="Adamina" font-size="12" fill="#64748B">10%</text>
+      <text x="188" y="314" text-anchor="end" font-family="Adamina" font-size="12" fill="#64748B">0%</text>
+
+      <!-- 4 horizontal grid lines -->
+      <line x1="200" y1="10"  x2="1123" y2="10"  stroke="#CBD5E140" stroke-width="1"/>
+      <line x1="200" y1="110" x2="1123" y2="110" stroke="#CBD5E140" stroke-width="1"/>
+      <line x1="200" y1="210" x2="1123" y2="210" stroke="#CBD5E140" stroke-width="1"/>
+      <line x1="200" y1="310" x2="1123" y2="310" stroke="#CBD5E140" stroke-width="1"/>
+
+      <!-- 12 vertical grid lines at month positions (238.5→1084.4, step≈76.9) -->
+      <line x1="238"  y1="10" x2="238"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="315"  y1="10" x2="315"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="392"  y1="10" x2="392"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="469"  y1="10" x2="469"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="546"  y1="10" x2="546"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="623"  y1="10" x2="623"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="700"  y1="10" x2="700"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="777"  y1="10" x2="777"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="854"  y1="10" x2="854"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="931"  y1="10" x2="931"  y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="1008" y1="10" x2="1008" y2="310" stroke="#CBD5E110" stroke-width="1"/>
+      <line x1="1084" y1="10" x2="1084" y2="310" stroke="#CBD5E110" stroke-width="1"/>
+
+      <!-- Month labels at x-axis (y=318) -->
+      <text x="229"  y="330" font-family="Adamina" font-size="10" fill="#64748B">1/25</text>
+      <text x="306"  y="330" font-family="Adamina" font-size="10" fill="#64748B">2/25</text>
+      <text x="383"  y="330" font-family="Adamina" font-size="10" fill="#64748B">3/25</text>
+      <text x="460"  y="330" font-family="Adamina" font-size="10" fill="#64748B">4/25</text>
+      <text x="537"  y="330" font-family="Adamina" font-size="10" fill="#64748B">5/25</text>
+      <text x="614"  y="330" font-family="Adamina" font-size="10" fill="#64748B">6/25</text>
+      <text x="691"  y="330" font-family="Adamina" font-size="10" fill="#64748B">7/25</text>
+      <text x="768"  y="330" font-family="Adamina" font-size="10" fill="#64748B">8/25</text>
+      <text x="845"  y="330" font-family="Adamina" font-size="10" fill="#64748B">9/25</text>
+      <text x="919"  y="330" font-family="Adamina" font-size="10" fill="#64748B">10/25</text>
+      <text x="996"  y="330" font-family="Adamina" font-size="10" fill="#64748B">11/25</text>
+      <text x="1073" y="330" font-family="Adamina" font-size="10" fill="#64748B">12/25</text>
+      <text x="1147" y="330" font-family="Adamina" font-size="10" font-weight="600" fill="#64748B">TOTAL</text>
+
+      <!-- y = 310 - (value/30)*300 -->
+      <!-- Gold area fill -->
+      <polygon points="238,310 238,287 315,265 392,245 469,221 546,197 623,177 700,153 777,128 854,102 931,79 1008,55 1084,30 1084,310"
+        fill="url(#gradGold)"/>
+      <!-- Red area fill -->
+      <polygon points="238,310 238,299 315,287 392,277 469,266 546,254 623,247 700,235 777,228 854,214 931,204 1008,193 1084,180 1084,310"
+        fill="url(#gradRed)"/>
+      <!-- Blue area fill -->
+      <polygon points="238,310 238,299 315,289 392,282 469,273 546,268 623,262 700,257 777,251 854,245 931,240 1008,235 1084,231 1084,310"
+        fill="url(#gradBlue)"/>
+
+      <!-- Gold line (IG11 + Proprietary) — stroke-width 2.5 -->
+      <polyline id="line-gold"
+        points="238,287 315,265 392,245 469,221 546,197 623,177 700,153 777,128 854,102 931,79 1008,55 1084,30"
+        fill="none" stroke="#C8A84B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- Red line (Gami & IG11) -->
+      <polyline id="line-red"
+        points="238,299 315,287 392,277 469,266 546,254 623,247 700,235 777,228 854,214 931,204 1008,193 1084,180"
+        fill="none" stroke="#E05C5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- Blue line (DeFi) -->
+      <polyline id="line-blue"
+        points="238,299 315,289 392,282 469,273 546,268 623,262 700,257 777,251 854,245 931,240 1008,235 1084,231"
+        fill="none" stroke="#4A90D9" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+      <!-- Triangle markers at endpoints (Pencil: polygon nodes) -->
+      <polygon points="1085,25 1090,33 1080,33" fill="#C8A84B"/>
+      <polygon points="1085,175 1090,183 1080,183" fill="#E05C5C"/>
+      <polygon points="1085,226 1090,234 1080,234" fill="#4A90D9"/>
+
+      <!-- End-point value labels -->
+      <text x="1096" y="33"  font-family="Adamina" font-size="12" font-weight="700" fill="#C8A84B">28.00%</text>
+      <text x="1096" y="183" font-family="Adamina" font-size="12" font-weight="700" fill="#E05C5C">13.10%</text>
+      <text x="1096" y="234" font-family="Adamina" font-size="12" font-weight="700" fill="#4A90D9">7.93%</text>
+
+      <!-- Interactive crosshair & dots -->
+      <line id="chart-crosshair" x1="0" y1="10" x2="0" y2="310" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3" opacity="0" pointer-events="none"/>
+      <circle id="cdot-gold" r="4" fill="#fff" stroke="#C8A84B" stroke-width="2" opacity="0" pointer-events="none"/>
+      <circle id="cdot-red"  r="4" fill="#fff" stroke="#E05C5C" stroke-width="2" opacity="0" pointer-events="none"/>
+      <circle id="cdot-blue" r="4" fill="#fff" stroke="#4A90D9" stroke-width="2" opacity="0" pointer-events="none"/>
+      <g id="chart-tooltip" opacity="0" pointer-events="none">
+        <rect id="tt-bg" rx="0" ry="0" fill="#fff" stroke="#E2E8F0" stroke-width="1" filter="url(#tt-shad)"/>
+        <text id="tt-month" font-family="Adamina" font-size="11" font-weight="700" fill="#0F172A"/>
+        <text id="tt-gold"  font-family="Adamina" font-size="10" fill="#C8A84B" font-weight="700"/>
+        <text id="tt-red"   font-family="Adamina" font-size="10" fill="#E05C5C"/>
+        <text id="tt-blue"  font-family="Adamina" font-size="10" fill="#4A90D9"/>
+      </g>
+      <rect id="chart-overlay" x="200" y="10" width="884" height="300" fill="transparent" style="cursor:crosshair;"/>
+    </svg>
+
+    <div class="c-legend">
+      <div class="c-leg-item" data-line="gold"><div class="c-leg-swatch" style="background:#C8A84B;"></div><span class="c-leg-lbl">IG11 + Proprietary Deal</span></div>
+      <div class="c-leg-item" data-line="red" ><div class="c-leg-swatch" style="background:#E05C5C;"></div><span class="c-leg-lbl">Gami &amp; IG11 Yield</span></div>
+      <div class="c-leg-item" data-line="blue"><div class="c-leg-swatch" style="background:#4A90D9;"></div><span class="c-leg-lbl">DeFi Market Stablecoin Yield</span></div>
+    </div>
+  </div>
+
+  <!-- TABLE — color-coded rows, left accent border, tinted background -->
+  <div style="width:100%;max-width:1200px;margin-top:12px;background:rgba(255,255,255,0.65);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:0;">
+    <table class="perf-table" style="width:100%;table-layout:fixed;">
+      <colgroup>
+        <col style="width:220px">
+        <col><col><col><col><col><col><col><col><col><col><col><col>
+        <col style="width:68px">
+      </colgroup>
+      <thead>
+        <tr><th>Strategy</th><th>1/25</th><th>2/25</th><th>3/25</th><th>4/25</th><th>5/25</th><th>6/25</th><th>7/25</th><th>8/25</th><th>9/25</th><th>10/25</th><th>11/25</th><th>12/25</th><th>TOTAL</th></tr>
+      </thead>
+      <tbody>
+        <tr class="row-blue"><td>DeFi Market Stablecoin Yield</td><td>1.07%</td><td>1.01%</td><td>0.76%</td><td>0.86%</td><td>0.51%</td><td>0.60%</td><td>0.47%</td><td>0.62%</td><td>0.58%</td><td>0.53%</td><td>0.47%</td><td>0.45%</td><td class="c-total">7.93%</td></tr>
+        <tr class="row-red"><td>Gami &amp; IG11 Yield</td><td>1.12%</td><td>1.20%</td><td>0.97%</td><td>1.16%</td><td>1.17%</td><td>0.71%</td><td>1.13%</td><td>0.79%</td><td>1.37%</td><td>0.95%</td><td>1.14%</td><td>1.29%</td><td class="c-total">13.10%</td></tr>
+        <tr class="row-gold"><td>IG11 + Proprietary Deal</td><td>2.35%</td><td>2.19%</td><td>1.98%</td><td>2.35%</td><td>2.42%</td><td>2.05%</td><td>2.39%</td><td>2.45%</td><td>2.64%</td><td>2.32%</td><td>2.39%</td><td>2.47%</td><td class="c-total">28.00%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- INVESTMENT MANDATE -->
+<section id="mandate">
+  <span class="s-pill reveal">Investment Mandate</span>
+  <h2 class="s-h2 reveal">Delta-Neutral Stablecoin Yield at Institutional Scale</h2>
+  <div class="s-body reveal">
+    <p>IG11 Capital is a Mauritius-based hedge fund dedicated to generating consistent, risk-adjusted USD yield through a diversified portfolio of stablecoin strategies — with zero exposure to directional crypto market risk.</p>
+    <p>IG11 deploys institutional capital exclusively within the stablecoin universe, using blue-chip DeFi primitives: money markets, fixed-rate protocols, DEX liquidity and governance incentives. All strategies are deployed through Gami Vaults, institutional-grade infrastructure backed by Fireblocks and Warwyck Private Bank custody.</p>
+    <p>IG11 Capital is the delta-neutral arm of Mirabeau Capital, designed to serve institutional investors, family offices and qualified private investors seeking USD-denominated yield without exposure to crypto market volatility.</p>
+    <p>USD Share Class — Built on fully regulated USD stablecoins, targeting 20%+ absolute returns in USD terms. Capital is highly liquid with a 15-day redemption notice and monthly redemption windows.</p>
+    <p>Since inception in January 2025, IG11 Capital has delivered 28% APY — outperforming its 20% target through organic DeFi strategies and exclusive proprietary deals negotiated directly with on-chain protocols.</p>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section id="mission">
+  <span class="s-pill reveal">Mission</span>
+  <h2 class="s-h2 reveal">Why IG11 Capital?</h2>
+  <div class="s-body reveal">
+    <p>Decentralized Finance (DeFi) offers competitive and sustainable yield through transparent, on-chain mechanisms. However, institutional adoption has been limited by perceived complexity, custody constraints, and the volatility of underlying crypto assets.</p>
+    <p>IG11 Capital provides a market-neutral approach — generating yield fully independent of digital asset market fluctuations. By focusing exclusively on stablecoin strategies, IG11 eliminates directional risk while capturing the structural inefficiencies and governance incentives native to DeFi protocols.</p>
+    <p>As more institutional investors recognize stablecoins as a legitimate cash management instrument, IG11 Capital bridges the gap: delivering DeFi-native yield within a fully regulated Mauritius fund structure, with full USD-based accounting and monthly liquidity — accessible to family offices, qualified investors, and institutional treasuries.</p>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <span class="s-pill reveal">Team</span>
+  <h2 class="s-h2 reveal">Combining TradFi discipline with DeFi native expertise in a Team</h2>
+
+  <div class="t-div reveal">
+    <div class="t-div-line"></div><span class="t-div-label">General Partners</span><div class="t-div-line"></div>
+  </div>
+  <div class="t-gp">
+    <div class="t-card gp reveal-sm" style="transition-delay:0ms">
+      <div class="t-photo"><img src="photos/pierre.jpg" alt="Pierre Perchenet"></div>
+      <div class="t-name">Pierre Perchenet</div>
+      <div class="t-role">Co-Founder &amp; CEO of IG11 Capital</div>
+      <div class="t-bio">Pierre is the Founder and CEO of BB8 Capital and IG11 Capital, with a background spanning strategy, IT consulting, and digital assets. Active in the DeFi space since its early days, he scaled BB8 Capital from $20M to $139M AUM by 2025, deploying institutional-grade capital across liquid blue-chip DeFi strategies.<br><br>He holds a Master's in Engineering from Centrale and an MBA from Stanford University.</div>
+    </div>
+    <div class="t-card gp reveal-sm" style="transition-delay:100ms">
+      <div class="t-photo"><img src="photos/david.jpg" alt="David Domper"></div>
+      <div class="t-name">David Domper</div>
+      <div class="t-role">Co-Founder &amp; CIO of IG11 Capital</div>
+      <div class="t-bio">David is the Founder and CEO of Gami Capital, with over a decade of experience in digital assets and financial markets, including equities, indices, and commodities. Active in the digital asset industry since 2015, he previously co-founded a crypto-focused Family Office before establishing Gami Capital and IG11 Capital.<br><br>He also serves as a Board Member of the StakeDAO Association.</div>
+    </div>
+  </div>
+
+  <div class="t-div reveal">
+    <div class="t-div-line"></div><span class="t-div-label">Team</span><div class="t-div-line"></div>
+  </div>
+  <div class="t-row">
+    <div class="t-card reveal-sm" style="transition-delay:0ms">
+      <div class="t-photo"><img src="photos/leo.jpg" alt="Leo Leclercq"></div>
+      <div class="t-name">Leo Leclercq</div><div class="t-role">Lead Analyst</div>
+      <div class="t-bio">Venture Capital Associate and Head of Liquid Strategies at Stake Capital Group ($250M+ AUM). Leads portfolio management, yield generation, and governance across major DeFi protocols.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:80ms">
+      <div class="t-photo"><img src="photos/noah.jpg" alt="Noah Boisserie"></div>
+      <div class="t-name">Noah Boisserie</div><div class="t-role">Senior Analyst</div>
+      <div class="t-bio">Founder and CEO of Cooper Labs, service provider for Parallel protocol. Former Investor at Stake Capital, DeFi and governance contributor at StakeDAO, co-founder &amp; CEO of Straleg.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:160ms">
+      <div class="t-photo"><img src="photos/alin.jpg" alt="Alin Popa"></div>
+      <div class="t-name">Alin Popa</div><div class="t-role">Senior Quantitative Analyst</div>
+      <div class="t-bio">Part of the leading team of a €30M European Cybersecurity quantum project (NANoQ). BSc ICSI, MSc Financial Computing, PhD Financial ML. Teacher at Politehnica Quantum Computing master's program.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:240ms">
+      <div class="t-photo"><img src="photos/augustin.jpg" alt="Augustin Girault"></div>
+      <div class="t-name">Augustin Girault</div><div class="t-role">DeFi Analyst</div>
+      <div class="t-bio">Master's in Finance from Sciences Po Bordeaux. Five years at PwC Paris auditing Nasdaq &amp; Fortune 500 companies. Institutional-grade financial rigor applied to DeFi at Gami Labs.</div>
+    </div>
+  </div>
+
+  <div class="t-div reveal">
+    <div class="t-div-line"></div><span class="t-div-label">Advisors &amp; Partners</span><div class="t-div-line"></div>
+  </div>
+  <div class="t-row">
+    <div class="t-card reveal-sm" style="transition-delay:0ms">
+      <div class="t-photo"><img src="photos/charles.jpg" alt="Charles PBC"></div>
+      <div class="t-name">Charles PBC</div><div class="t-role">Advisor</div>
+      <div class="t-bio">Founder of Paralia ($200M+ AUM), Chairman G21. Former Partner at 7MW ($1B venture studio). Co-founder &amp; CEO of Blocknx (acquired). Inventor of a patented system for asset revenue streams.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:80ms">
+      <div class="t-photo"><img src="photos/cyril.jpg" alt="Cyril Pipaud"></div>
+      <div class="t-name">Cyril Pipaud</div><div class="t-role">Advisor</div>
+      <div class="t-bio">25 years across asset management, fintech, and blockchain. GPO at Scrypt Zurich. Former BNP Paribas APAC overseeing $70B. Charter &amp; Master's in Economics, Banking and Finance.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:160ms">
+      <div class="t-photo"><img src="photos/hichem.jpg" alt="Hichem Bouchouareb"></div>
+      <div class="t-name">Hichem Bouchouareb</div><div class="t-role">Partner</div>
+      <div class="t-bio">20+ years in Institutional &amp; Digital Asset Management. Founder of BlockWealth, co-founder of Goldbach Capital and Day Capital. Former HSBC Asset Management. MSc ESGF Business School.</div>
+    </div>
+    <div class="t-card reveal-sm" style="transition-delay:240ms">
+      <div class="t-photo"><img src="photos/jj.jpg" alt="Jean-Jacques Dandrieux"></div>
+      <div class="t-name">Jean-Jacques Dandrieux</div><div class="t-role">Advisor</div>
+      <div class="t-bio">15+ years in M&amp;A, venture capital and structured finance. $2.5B+ in credit facilities (Crédit Agricole CIB), pre-IPO allocations. MSc Global Finance, NYU Stern / HKUST.</div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUE PROPOSITION -->
+<section id="value-prop">
+  <span class="s-pill reveal">Value Proposition</span>
+  <h2 class="s-h2 reveal">Delta-Neutral Access to Institutional-Grade DeFi Yield</h2>
+  <div class="vp-grid">
+    <div class="vp-card reveal-sm" style="transition-delay:0ms">
+      <div class="vp-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+      <div class="vp-title">Delta-Neutral Strategy</div>
+      <div class="vp-body">IG11 Capital deploys capital across 40+ DeFi protocols using a proprietary delta-neutral approach — eliminating directional crypto exposure while capturing sustainable on-chain yield.<br/><br/>Target: 15–25% net APY with Sharpe ratio above 10.</div>
+    </div>
+    <div class="vp-card reveal-sm" style="transition-delay:120ms">
+      <div class="vp-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <div class="vp-title">Institutional Access, Zero Complexity</div>
+      <div class="vp-body">No private keys, no smart contract risk, no on-chain operational burden. Investors gain seamless exposure to DeFi yield through an FSC Mauritius regulated fund, with $1M minimum subscription and monthly liquidity.</div>
+    </div>
+    <div class="vp-card reveal-sm" style="transition-delay:240ms">
+      <div class="vp-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="vp-title">Proprietary Alpha Engine</div>
+      <div class="vp-body">Our in-house quantitative engine continuously scans and optimizes yield — delivering 28% APY in 2025 vs 7.93% DeFi benchmark.<br/><br/>Audited by Nexia Bakers &amp; Arenson. Monthly drawdown at 0%.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FUND INFORMATION -->
+<section id="fund-info">
+  <span class="s-pill reveal">Fund Information</span>
+  <h2 class="s-h2 reveal">Regulated, Secure, Liquid: IG11 Capital's<br/>Institutional-Grade Fund Structure</h2>
+  <div class="fi-table reveal-sm">
+    <div class="fi-row"><div class="fi-lbl">Name</div><div class="fi-val">IG11 Capital</div><div class="fi-lbl">Regulator</div><div class="fi-val">FSC, Mauritius</div></div>
+    <div class="fi-row"><div class="fi-lbl">Fund structure</div><div class="fi-val">Fund under Warwyck Phoenix VCC</div><div class="fi-lbl">Investor type</div><div class="fi-val">Qualified and Institutional Investors</div></div>
+    <div class="fi-row"><div class="fi-lbl">Underlying assets</div><div class="fi-val">USDC, BTC, ETH (DeFi)</div><div class="fi-lbl">Reference currency</div><div class="fi-val">USD</div></div>
+    <div class="fi-row"><div class="fi-lbl">Fund strategy</div><div class="fi-val">Delta-Neutral / Market-Neutral</div><div class="fi-lbl">Investment style</div><div class="fi-val">Quantitative</div></div>
+    <div class="fi-row"><div class="fi-lbl">Subscription / Redemption</div><div class="fi-val">Monthly / Monthly (15-day notice)</div><div class="fi-lbl">NAV</div><div class="fi-val">Weekly</div></div>
+    <div class="fi-row"><div class="fi-lbl">Performance objective</div><div class="fi-val">20% APY targeting</div><div class="fi-lbl">Minimum commitment</div><div class="fi-val">$1,000,000</div></div>
+    <div class="fi-row"><div class="fi-lbl">Accepted currencies</div><div class="fi-val">USD – USDC / USDT</div><div class="fi-lbl">Fee structure</div><div class="fi-val">2% Mgmt / 20% Perf (HWM)</div></div>
+    <div class="fi-row"><div class="fi-lbl">Auditor</div><div class="fi-val">Nexia Bakers &amp; Arenson</div><div class="fi-lbl">Custodian</div><div class="fi-val">Warwyck Private Bank Ltd</div></div>
+    <div class="fi-row"><div class="fi-lbl">Fund Administrator</div><div class="fi-val">Warwyck Phoenix VCC</div><div class="fi-lbl">Depositary bank</div><div class="fi-val">Warwyck Private Bank Ltd</div></div>
+  </div>
+</section>
+
+<!-- CTA — Pencil: cornerRadius 20 -->
+<section id="cta" class="pad-cta" style="min-height:unset;align-items:center;">
+  <a href="contact.html" class="cta-btn reveal">Request Information</a>
+</section>
+
+<!-- FOOTER — Pencil: single disclaimer text block, color #94A3B8 -->
+<footer>
+  <div class="reveal">
+    <div class="f-logo">IG11 CAPITAL</div>
+    <div class="f-addr">Warwyck House, Mulchandry Road, Floréal, 73534, Mauritius</div>
+  </div>
+  <div class="f-disc reveal">
+    <p class="f-disc-txt">Disclaimer
+This presentation is for informational purposes only and does not constitute an offer to sell securities, nor a solicitation of an investment. The securities of any private fund managed by IG11 Capital, a Private Company Limited by Shares, are offered only to a select group of qualified investors. Any investment decision must be based exclusively on the official Offering Documents, which will be provided following a meeting, and will supersede any other information, including this document.
+
+An investment in the strategies described herein involves a degree of risk, as does any investment, and there is no guarantee that the stated objectives will be achieved. The information presented has been prepared by IG11 Capital from sources considered reliable by Gami Capital and IG11 Capital. However, IG11 Capital makes no representation as to their accuracy or completeness. The opinions and projections expressed in this document reflect our current judgment and are subject to change.
+
+This document is strictly confidential. Its reproduction, redistribution, or the disclosure of its contents, even in part, is prohibited without the express written consent of IG11 Capital. Graphs and diagrams are provided for illustrative purposes only. No warranty is offered as to the accuracy of forward-looking statements. All projections, forecasts, and estimates contained in this document are speculative and based on assumptions.
+
+Nothing in this document constitutes investment, legal, or tax advice. It is the responsibility of each investor to determine the tax consequences of capital gains, which depend on their income level, status, and jurisdiction.
+© 2026 IG11 Capital. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-ov" id="loginModal">
+  <div class="modal">
+    <button class="m-close" onclick="closeModal()">✕</button>
+    <h2>Client Login</h2>
+    <p>Access your investor dashboard</p>
+    <div class="fg"><label>Email</label><input type="email" id="mEmail" placeholder="your@email.com"/></div>
+    <div class="fg"><label>Password</label><input type="password" id="mPass" placeholder="••••••••"/></div>
+    <div class="m-err" id="mErr">Incorrect credentials. Please try again.</div>
+    <button class="m-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<script>
+/* ── Modal ── */
+function openModal(){ document.getElementById('loginModal').classList.add('active'); document.getElementById('mEmail').focus(); }
+function closeModal(){ document.getElementById('loginModal').classList.remove('active'); document.getElementById('mErr').style.display='none'; }
+function doLogin(){
+  const e=document.getElementById('mEmail').value.trim().toLowerCase();
+  const p=document.getElementById('mPass').value;
+  if(e==='pierreperchenet@gmail.com'&&p==='Mirabeau@2026'){
+    window.location.href='https://0xboka.github.io/ig11capital/ig11_dashboard_V4.html';
+  } else { document.getElementById('mErr').style.display='block'; }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('mPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('loginModal').addEventListener('click',e=>{ if(e.target===document.getElementById('loginModal')) closeModal(); });
+});
+
+/* ── SCROLL ANIMATIONS ── */
+document.addEventListener('DOMContentLoaded', () => {
+  // General reveal observer
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal, .reveal-sm').forEach(el => revealObs.observe(el));
+
+  // Slogan annotation observer — staggered amber paths appear after slogan enters view
+  const sloganWrap = document.querySelector('.slogan-container');
+  if (sloganWrap) {
+    const annObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          ['ann1','ann2','ann3'].forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (el) setTimeout(() => el.classList.add('visible'), 350 + i * 220);
+          });
+          annObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    annObs.observe(sloganWrap);
+  }
+});
+
+/* ── Chart interactions ── */
+(function(){
+  // x positions matching Pencil vertical grid lines
+  var xPts  = [238,315,392,469,546,623,700,777,854,931,1008,1084];
+  var months = ['1/25','2/25','3/25','4/25','5/25','6/25','7/25','8/25','9/25','10/25','11/25','12/25'];
+  var dGold = [2.35,4.54,6.52,8.87,11.29,13.34,15.73,18.18,20.82,23.14,25.53,28.00];
+  var dRed  = [1.12,2.32,3.29,4.45,5.62,6.33,7.46,8.25,9.62,10.57,11.71,13.00];
+  var dBlue = [1.07,2.08,2.84,3.70,4.21,4.81,5.28,5.90,6.48,7.01,7.48,7.93];
+
+  // y = 310 - (value/30)*300
+  function toY(v){ return 310 - (v/30)*300; }
+  function nearest(sx){ var idx=0,best=Infinity; xPts.forEach(function(x,i){ var d=Math.abs(sx-x); if(d<best){best=d;idx=i;} }); return idx; }
+  function svgPt(e){ var svg=document.getElementById('track-chart'); var r=svg.getBoundingClientRect(); var vbW=1260,vbH=360; return {x:(e.clientX-r.left)/r.width*vbW, y:(e.clientY-r.top)/r.height*vbH}; }
+  function sa(el,attrs){ Object.keys(attrs).forEach(function(k){ el.setAttribute(k,attrs[k]); }); }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var overlay = document.getElementById('chart-overlay'); if(!overlay) return;
+    var cross=document.getElementById('chart-crosshair');
+    var dG=document.getElementById('cdot-gold'),dR=document.getElementById('cdot-red'),dB=document.getElementById('cdot-blue');
+    var tt=document.getElementById('chart-tooltip'),ttBg=document.getElementById('tt-bg');
+    var ttM=document.getElementById('tt-month'),ttG=document.getElementById('tt-gold'),ttR=document.getElementById('tt-red'),ttB=document.getElementById('tt-blue');
+
+    overlay.addEventListener('mousemove', function(e){
+      var pt=svgPt(e), i=nearest(pt.x), x=xPts[i];
+      var yG=toY(dGold[i]), yR=toY(dRed[i]), yBl=toY(dBlue[i]);
+      sa(cross,{x1:x,x2:x,opacity:1});
+      sa(dG,{cx:x,cy:yG,opacity:1}); sa(dR,{cx:x,cy:yR,opacity:1}); sa(dB,{cx:x,cy:yBl,opacity:1});
+      var ttW=122,ttH=82,ttX=x+12,ttY=20; if(ttX+ttW>1100) ttX=x-ttW-10;
+      sa(ttBg,{x:ttX,y:ttY,width:ttW,height:ttH});
+      sa(ttM,{x:ttX+8,y:ttY+16}); sa(ttG,{x:ttX+8,y:ttY+32}); sa(ttR,{x:ttX+8,y:ttY+49}); sa(ttB,{x:ttX+8,y:ttY+65});
+      ttM.textContent=months[i];
+      ttG.textContent='IG11  '+dGold[i].toFixed(2)+'%';
+      ttR.textContent='Gami  '+dRed[i].toFixed(2)+'%';
+      ttB.textContent='DeFi  '+dBlue[i].toFixed(2)+'%';
+      tt.setAttribute('opacity',1);
+    });
+    overlay.addEventListener('mouseleave', function(){
+      [cross,dG,dR,dB,tt].forEach(function(el){ el.setAttribute('opacity',0); });
+    });
+
+    // Legend hover — highlight one line, fade others
+    var lm={'gold':'line-gold','red':'line-red','blue':'line-blue'};
+    document.querySelectorAll('.c-leg-item[data-line]').forEach(function(item){
+      var key=item.getAttribute('data-line');
+      item.addEventListener('mouseenter',function(){
+        Object.keys(lm).forEach(function(k){ var el=document.getElementById(lm[k]); if(el) el.setAttribute('opacity',k===key?1:0.12); });
+        item.style.background='rgba(0,0,0,0.04)';
+      });
+      item.addEventListener('mouseleave',function(){
+        Object.keys(lm).forEach(function(k){ var el=document.getElementById(lm[k]); if(el) el.setAttribute('opacity',1); });
+        item.style.background='';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
